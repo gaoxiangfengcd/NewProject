@@ -21,6 +21,7 @@ export function generateMetadata({ params }: { params: { slug: string } }): Meta
       description: post.description,
       publishedTime: post.date,
       authors: [post.author],
+      images: [{ url: post.cover }],
     },
   }
 }
@@ -60,6 +61,14 @@ export default function BlogPostPage({
           ))}
         </div>
       </div>
+
+      {/* 封面图 */}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={post.cover}
+        alt={post.coverAlt}
+        className="mt-8 aspect-video w-full rounded-xl border border-border object-cover"
+      />
 
       {/* 文章正文 */}
       <div className="prose-content mt-8">

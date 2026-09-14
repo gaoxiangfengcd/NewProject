@@ -2,7 +2,6 @@ import type { Metadata } from 'next'
 import { Inter, Noto_Serif_SC } from 'next/font/google'
 import Link from 'next/link'
 import Script from 'next/script'
-import { ComingSoonToast } from '@/components/ComingSoonToast'
 import './globals.css'
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans' })
@@ -94,9 +93,9 @@ export default function RootLayout({
               </div>
               <div className="space-y-2">
                 <p className="eyebrow text-primary-foreground/50">产品</p>
-                <ComingSoonToast className="block text-sm text-primary-foreground/80 hover:text-primary-foreground">
+                <Link href="/coming-soon" className="block text-sm text-primary-foreground/80 hover:text-primary-foreground">
                   MeMeGo 梗图生成器
-                </ComingSoonToast>
+                </Link>
               </div>
               <div className="space-y-2">
                 <p className="eyebrow text-primary-foreground/50">公司</p>

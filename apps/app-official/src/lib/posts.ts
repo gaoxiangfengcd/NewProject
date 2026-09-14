@@ -12,6 +12,8 @@ export interface BlogPost {
   author: string
   category: string
   tags: string[]
+  cover: string
+  coverAlt: string
   body: { type: 'p' | 'h2' | 'h3' | 'ul'; content: string | string[] }[]
 }
 
@@ -25,6 +27,9 @@ export const posts: BlogPost[] = [
     author: '菅等村团队',
     category: 'AI 教程',
     tags: ['AI 生成', '教程', 'MeMeGo', '梗图'],
+    cover:
+      'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Colorful%20flat%20illustration%20of%20a%20meme%20creator%20workspace%2C%20computer%20screen%20showing%20a%20funny%20cat%20meme%20with%20caption%20bubbles%2C%20creative%20social%20media%20content%20design%2C%20vibrant%20colors%2C%20modern%20digital%20art%20style&image_size=landscape_16_9',
+    coverAlt: 'AI 梗图创作工作台插画',
     body: [
       { type: 'p', content: '在社交媒体时代，梗图（meme）已成为一种独特的表达语言。一个好的梗图可以在几秒钟内传递复杂的信息，引发共鸣甚至病毒传播。随着 AI 图片生成技术的成熟，创作梗图不再需要设计技能——你只需要一个好想法和一句话。' },
       { type: 'h2', content: '什么是 AI 梗图生成' },
@@ -74,6 +79,9 @@ export const posts: BlogPost[] = [
     author: '菅等村团队',
     category: '技术分析',
     tags: ['AI 模型', 'Flux', '对比', '技术'],
+    cover:
+      'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Futuristic%20technology%20comparison%20concept%20art%2C%20multiple%20AI%20processor%20chips%20in%20a%20grid%20layout%20with%20neural%20network%20visualization%20lines%2C%20blue%20and%20purple%20gradient%2C%20clean%20modern%20infographic%20digital%20illustration&image_size=landscape_16_9',
+    coverAlt: 'AI 图片模型对比概念插画',
     body: [
       { type: 'p', content: 'AI 图片生成领域在 2026 年迎来了爆发式增长。从开源到闭源，从通用到垂直，各种模型层出不穷。作为用户或开发者，如何在这场技术洪流中做出正确选择？本文将从速度、质量、成本和可定制性四个维度对比主流模型。' },
       { type: 'h2', content: 'Flux 系列（Black Forest Labs）' },
@@ -108,6 +116,9 @@ export const posts: BlogPost[] = [
     author: '菅等村团队',
     category: '产品故事',
     tags: ['MeMeGo', '创业', '产品理念', '故事'],
+    cover:
+      'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Cozy%20countryside%20creative%20workshop%20with%20computers%20and%20colorful%20posters%20on%20walls%2C%20warm%20sunset%20light%20through%20window%2C%20small%20friendly%20studio%20atmosphere%2C%20heartwarming%20illustration%20style&image_size=landscape_16_9',
+    coverAlt: '乡村创意工作室插画',
     body: [
       { type: 'p', content: '每一个产品的诞生都源于一个问题。MeMeGo 的问题很简单：为什么创作一张有趣的图片，需要学 Photoshop？' },
       { type: 'h2', content: '起点：一个朴素的观察' },
@@ -142,6 +153,9 @@ export const posts: BlogPost[] = [
     author: '菅等村团队',
     category: '技术实践',
     tags: ['隐私', 'GDPR', '安全', '技术'],
+    cover:
+      'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Digital%20privacy%20protection%20concept%20illustration%2C%20glowing%20shield%20icon%20over%20a%20smartphone%20with%20padlock%20symbols%2C%20abstract%20data%20streams%20in%20background%2C%20blue%20tones%2C%20minimalist%20flat%20design&image_size=landscape_16_9',
+    coverAlt: '数据隐私保护概念插画',
     body: [
       { type: 'p', content: '在 AI 应用中，用户隐私保护常常被当作"写进隐私政策就行"的合规问题。但我们认为，隐私保护应该是工程问题——需要用代码来落实，而不只是用文字来承诺。' },
       { type: 'h2', content: '数据最小化原则' },
@@ -189,6 +203,9 @@ export const posts: BlogPost[] = [
     author: '菅等村团队',
     category: 'AI 教程',
     tags: ['提示词', 'AI 教程', '创意', 'MeMeGo'],
+    cover:
+      'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Creative%20person%20typing%20on%20a%20laptop%20with%20colorful%20imagination%20bubbles%20floating%20above%20the%20screen%2C%20art%20supplies%20and%20digital%20drawing%20tablet%20on%20desk%2C%20inspiring%20creative%20workspace%2C%20warm%20modern%20illustration%20style&image_size=landscape_16_9',
+    coverAlt: '创意提示词工作场景插画',
     body: [
       { type: 'p', content: '"提示词工程"听起来像是一门技术学科，但实际上它更像是与 AI 对话的艺术。你不需要会写代码，不需要懂模型架构——你只需要会说话，会描述，会表达你想要的画面。' },
       { type: 'h2', content: '为什么提示词很重要' },
@@ -229,6 +246,9 @@ export const posts: BlogPost[] = [
     author: '菅等村团队',
     category: '技术实践',
     tags: ['Monorepo', '架构', 'pnpm', '工程化'],
+    cover:
+      'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Organized%20code%20repository%20concept%20illustration%2C%20interconnected%20building%20blocks%20and%20folders%20in%20a%20clean%20structure%2C%20software%20engineering%20workspace%20with%20multiple%20screens%2C%20teal%20and%20indigo%20color%20palette%2C%20isometric%20flat%20design&image_size=landscape_16_9',
+    coverAlt: 'Monorepo 工程结构插画',
     body: [
       { type: 'p', content: '当团队只有几个人甚至一个人时，代码组织方式看起来不是一个紧迫的问题。但经验告诉我们：项目组织方式在第一天就决定了未来迭代的顺滑度。' },
       { type: 'h2', content: '什么是 Monorepo' },
@@ -263,6 +283,48 @@ export const posts: BlogPost[] = [
       { type: 'p', content: '这种"代码集中管理、部署各自独立"的模式，既保持了开发效率，又不影响部署灵活性。对小团队来说，这是最实用的平衡点。' },
       { type: 'h2', content: '总结' },
       { type: 'p', content: 'Monorepo 不是大公司的专利。恰恰相反，小团队更需要代码复用和工具链统一带来的效率提升。pnpm workspace 让 monorepo 的搭建和维护成本极低，而收益是持续和复利的。如果你的团队正在做多产品线，强烈建议从第一天就用 monorepo。' },
+    ],
+  },
+  {
+    slug: 'ai-creative-workflow-efficiency',
+    title: '从灵感到成品：AI 时代的高效创意工作流',
+    description:
+      '灵感易逝，执行昂贵。分享一套把 AI 工具嵌入创意流程的实践方法，让好点子以更低成本快速落地。',
+    date: '2026-08-01',
+    author: '菅等村团队',
+    category: '设计灵感',
+    tags: ['工作流', '效率', '设计灵感', 'AI 工具'],
+    cover:
+      'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=Creative%20workflow%20journey%20from%20rough%20sketch%20to%20finished%20digital%20artwork%2C%20step%20by%20step%20transformation%20stages%20shown%20left%20to%20right%2C%20artist%20desk%20with%20drawing%20tablet%20and%20colorful%20artwork%20evolution%2C%20vibrant%20modern%20flat%20illustration&image_size=landscape_16_9',
+    coverAlt: '从草图到成品的创意工作流插画',
+    body: [
+      { type: 'p', content: '每个创意工作者都经历过这样的时刻：洗澡时、通勤路上、睡前刷手机的一瞬间，一个好点子突然冒出来。但等到你坐到电脑前准备执行时，热情已经冷却了一半——因为从"想法"到"成品"之间，隔着重重工具和流程的阻力。AI 时代的创意工作流，要解决的核心问题就是这个：如何让执行的成本降到足够低，让灵感趁热落地。' },
+      { type: 'h2', content: '传统创意流程的三个断点' },
+      { type: 'p', content: '回顾传统的视觉创作流程，最常见的三个断点分别是：' },
+      { type: 'ul', content: [
+        '技能断点：想法很好，但不会画画、不会修图，想法只能停留在脑子里',
+        '工具断点：打开专业软件要建文件、找素材、调参数，仪式感太重，启动成本太高',
+        '反馈断点：改一版要等很久，修改成本高导致不敢试错，第一版往往就是最终版',
+      ] },
+      { type: 'p', content: '这三个断点的共同点是：它们消耗的不是创造力，而是热情。很多好点子不是被否定的，而是在繁琐的执行过程中被自己放弃的。' },
+      { type: 'h2', content: 'AI 工具如何缝合这些断点' },
+      { type: 'p', content: 'AI 生成工具的价值，不在于"替代设计师"，而在于把执行成本压缩到想法可以即兴验证的程度。以视觉创意为例，现在的工作流可以是：想到一个画面，用一句话描述，几秒钟看到结果；不满意，调整描述再生成；方向对了，再精修细节。' },
+      { type: 'p', content: '这个"描述—生成—迭代"的小循环，把过去以小时计的反馈周期压缩到了秒级。当试错变得廉价，你会自然地探索更多方向——而更多的方向，意味着更高的出好作品的概率。这不是偷懒，这是扩大了创意的搜索空间。' },
+      { type: 'h2', content: '我们推荐的四步工作流' },
+      { type: 'p', content: '结合自己团队做 MeMeGo 和日常创作的经验，我们总结了一套轻量但完整的四步工作流：' },
+      { type: 'h3', content: '第一步：极速记录灵感' },
+      { type: 'p', content: '灵感出现时，不要相信自己的记忆力。用手机备忘录或语音输入，把画面用一两句话写下来。重点是记录"画面感"：谁、在哪里、在做什么、什么氛围。这个习惯坚持下来，你会发现自己的灵感库比想象中丰富得多。' },
+      { type: 'h3', content: '第二步：批量生成方向' },
+      { type: 'p', content: '把灵感描述喂给 AI 工具，一次生成多个风格方向。比如同一个画面，分别用写实、动漫、油画风格各生成一版。这个阶段不要追求完美，追求的是"看到可能性"。视觉化的选项摆在一起，判断会变得非常快。' },
+      { type: 'h3', content: '第三步：聚焦迭代' },
+      { type: 'p', content: '从生成的方向中挑出一个最有感觉的，围绕它做定向迭代：调整构图、光线、情绪词。此时的迭代是有锚点的，每一次修改都是向着明确的 target 逼近，而不是漫无目的地碰运气。' },
+      { type: 'h3', content: '第四步：必要时精修' },
+      { type: 'p', content: '如果作品要正式发布，可以在 AI 生成的底稿上做人工精修——统一色调、加文字、调细节。AI 负责完成 80% 的基础工作，人负责最后 20% 决定品质的部分。这是目前人机协作性价比最高的分工方式。' },
+      { type: 'h2', content: '效率的真正含义' },
+      { type: 'p', content: '谈效率，很多人第一反应是"做得更快"。但对创意工作来说，效率的真正含义是"在热情消失之前完成验证"。一个需要两周才能看到成品的点子，和一个十秒钟就能看到雏形的点子，后者被做出来的概率要大得多。' },
+      { type: 'p', content: '工具的进步从来不是为了让人更忙碌，而是为了让表达更自由。当执行不再是瓶颈，创造才回归它本来的样子——一个纯粹关于想法和品味的游戏。这也是我们做 MeMeGo 的初衷：把"从灵感到成品"的距离，缩短到一句话。' },
+      { type: 'h2', content: '现在就开始' },
+      { type: 'p', content: '不用等到准备好，今天就可以用这套工作流做一次完整尝试：从你的灵感库里挑一条记录，用 AI 生成三个风格方向，选一个迭代两轮。整个过程不会超过十分钟，但你大概率会得到一张愿意分享出去的作品。创作的快感，就藏在这个即时反馈的循环里。' },
     ],
   },
 ]

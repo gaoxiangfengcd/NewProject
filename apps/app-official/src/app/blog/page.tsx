@@ -24,7 +24,14 @@ export default function BlogPage(): React.ReactElement {
         {allPosts.map((post) => (
           <article key={post.slug} className="border-b border-border pb-8">
             <Link href={`/blog/${post.slug}`} className="group block">
-              <div className="flex items-center gap-3 text-sm">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={post.cover}
+                alt={post.coverAlt}
+                loading="lazy"
+                className="aspect-video w-full rounded-xl border border-border object-cover transition group-hover:opacity-90"
+              />
+              <div className="mt-4 flex items-center gap-3 text-sm">
                 <span className="rounded-full bg-accent-soft px-2.5 py-0.5 text-xs font-medium text-accent">
                   {post.category}
                 </span>
