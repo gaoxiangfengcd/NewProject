@@ -1,0 +1,160 @@
+// 本地开发用 SQLite（零依赖）；上线时改回 provider = "mysql" + DATABASE_URL=mysql://...
+// SQLite 不支持 enum，这里用 String + 注释标注取值。
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/client"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String          @id @default(cuid())
+  email         String          @unique
+  passwordHash  String?
+  name          String?
+  avatarUrl     String?
+  oauthProvider String?
+  oauthUserId   String?
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  photos        Photo[]
+  generations   Generation[]
+  subscription  Subscription?
+  quota         Quota?
+  consents      ConsentRecord[]
+
+  @@index([oauthProvider, oauthUserId])
+}
+
+model Photo {
+  id           String        @id @default(cuid())
+  userId       String
+  r2Key        String
+  r2Url        String?
+  width        Int?
+  height       Int?
+  faceDetected Boolean       @default(false)
+  createdAt    DateTime      @default(now())
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  generations  Generation[]
+  analysis     FaceAnalysis?
+
+  @@index([userId])
+}
+
+// AI 人脸 & 发质分析结果（MVP 为 mock provider，后续可换 Gemini 视觉模型）
+model FaceAnalysis {
+  id          String   @id @default(cuid())
+  photoId     String   @unique
+  faceShape   String // oval|round|square|heart|oblong|diamond
+  hairLength  String // short|medium|long
+  hairTexture String // straight|wavy|curly|coily
+  hairDensity String // thin|medium|thick
+  forehead    String // narrow|average|wide
+  jawline     String // soft|average|strong
+  provider    String   @default("mock") // mock|gemini
+  createdAt   DateTime @default(now())
+  photo       Photo    @relation(fields: [photoId], references: [id], onDelete: Cascade)
+}
+
+model Generation {
+  id                    String    @id @default(cuid())
+  userId                String
+  photoId               String
+  prompt                String
+  status                String    @default("queued") // queued|processing|succeeded|failed
+  replicatePredictionId String?
+  resultR2Key           String?
+  resultR2Url           String?
+  error                 String?
+  // 发型试戴元数据
+  styleId               String? // hairstyles.ts 中的 id；custom 模式为空
+  styleName             String?
+  mode                  String    @default("style") // style|custom|reference
+  batchId               String? // 多发型对比批次，同批共享
+  hairColor             String? // 发色（black/brown/dark-brown/blonde/ash-blonde/red/copper/silver）
+  referencePhotoId      String? // 参考图 Photo ID（reference 模式用）
+  shareToken            String?   @unique // 公开分享令牌
+  createdAt             DateTime  @default(now())
+  completedAt           DateTime?
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  photo                 Photo     @relation(fields: [photoId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([status])
+  @@index([batchId])
+  @@index([styleId])
+}
+
+model Subscription {
+  id                String    @id @default(cuid())
+  userId            String    @unique
+  stripeSubId       String?   @unique
+  status            String    @default("active") // active|past_due|canceled|trialing|paused
+  stripeCustomerId  String?
+  currentPeriodEnd  DateTime?
+  cancelAtPeriodEnd Boolean   @default(false)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([stripeCustomerId])
+}
+
+model Quota {
+  id                String   @id @default(cuid())
+  userId            String   @unique
+  freeUsedThisMonth Int      @default(0)
+  freeResetAt       DateTime
+  paidCredits       Int      @default(0)
+  updatedAt         DateTime @updatedAt
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model ConsentRecord {
+  id            String   @id @default(cuid())
+  userId        String
+  accepted      String // ConsentPurpose[] JSON 字符串（SQLite 用 String 存）
+  policyVersion String
+  recordedAt    DateTime @default(now())
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model DsrRequest {
+  id          String    @id @default(cuid())
+  userId      String
+  status      String    @default("pending") // pending|processing|completed|failed
+  reason      String?
+  createdAt   DateTime  @default(now())
+  completedAt DateTime?
+}
+
+// Paddle webhook 事件审计表（幂等 + 可追溯）。
+// Paddle 遇到网络抖动会重试同一个 event_id，我们靠唯一索引挡掉重复加点数。
+model PaddleEvent {
+  id            String   @id @default(cuid())
+  eventId       String   @unique // Paddle event.id（幂等键）
+  eventName     String // transaction.completed | adjustment.created | adjustment.updated
+  transactionId String? // Paddle transaction.id
+  adjustmentId  String? // Paddle adjustment.id（退款用）
+  userId        String? // 从 passthrough 解析
+  credits       Int? // 本次交易对应的 credits（退款时为负数）
+  refundAmount  Int? // 退款金额（最小货币单位，cents）
+  refundReason  String? // 退款原因
+  eventType     String? // credit | refund | chargeback 等
+  payload       String // 原始 payload JSON（存下来可回放）
+  processedAt   DateTime @default(now())
+  success       Boolean  @default(true)
+  error         String?
+
+  @@index([eventName])
+  @@index([userId])
+  @@index([adjustmentId])
+  @@index([transactionId])
+}

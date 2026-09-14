@@ -1,0 +1,52 @@
+# app-photomeme 独立编排（最轻量部署：Redis + app-photomeme）。
+# 首次上线只跑这个：
+#   docker network create imagine-net 2>/dev/null; \
+#   docker compose --env-file .env.photomeme -f docker-compose.photomeme.yml up -d --build
+#
+# 后续加 app-web 时，直接 docker compose -f docker-compose.web.yml up -d 即可，
+# 两者通过 imagine-net 网络互通、各自独立 Redis 互不干扰。
+
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: photomeme-redis
+    restart: unless-stopped
+    command: redis-server --requirepass ${REDIS_PASSWORD} --appendonly yes
+    volumes:
+      - photomeme-redis-data:/data
+    networks:
+      - imagine-net
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a \"$$REDIS_PASSWORD\" ping | grep -q PONG"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  app-photomeme:
+    build:
+      context: .
+      dockerfile: apps/app-photomeme/Dockerfile
+    image: photomeme:local
+    container_name: photomeme
+    env_file:
+      - .env.photomeme
+    restart: unless-stopped
+    networks:
+      - imagine-net
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:3001/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+networks:
+  default:
+    name: imagine-net
+    external: true
+
+volumes:
+  photomeme-redis-data:

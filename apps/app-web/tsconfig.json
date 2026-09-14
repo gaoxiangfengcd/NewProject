@@ -1,0 +1,71 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "jsx": "preserve",
+    "allowJs": false,
+    "noEmit": true,
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "paths": {
+      "@/*": [
+        "./src/*"
+      ],
+      "@repo/common": [
+        "../../packages/common/src/index.ts"
+      ],
+      "@repo/auth": [
+        "../../packages/auth/src/index.ts"
+      ],
+      "@repo/payment": [
+        "../../packages/payment/src/index.ts"
+      ],
+      "@repo/storage": [
+        "../../packages/storage/src/index.ts"
+      ],
+      "@repo/tracking": [
+        "../../packages/tracking/src/index.ts"
+      ],
+      "@repo/tracking/server": [
+        "../../packages/tracking/src/server.ts"
+      ],
+      "@repo/tracking/client": [
+        "../../packages/tracking/src/client.ts"
+      ],
+      "@repo/notifications": [
+        "../../packages/notifications/src/index.ts"
+      ],
+      "@repo/errors": [
+        "../../packages/errors/src/index.ts"
+      ],
+      "@repo/errors/server": [
+        "../../packages/errors/src/server.ts"
+      ],
+      "@repo/errors/client": [
+        "../../packages/errors/src/client.ts"
+      ],
+      "@repo/rate-limit": [
+        "../../packages/rate-limit/src/index.ts"
+      ],
+      "@repo/jobs": [
+        "../../packages/jobs/src/index.ts"
+      ],
+      "@repo/compliance": [
+        "../../packages/compliance/src/index.ts"
+      ]
+    },
+    "incremental": true
+  },
+  "include": [
+    "src",
+    "next-env.d.ts",
+    ".next/types/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
+}

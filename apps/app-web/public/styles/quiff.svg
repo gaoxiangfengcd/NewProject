@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 800" width="600" height="800">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#EDF4FF"/>
+      <stop offset="1" stop-color="#DCE9FF"/>
+    </linearGradient>
+  </defs>
+  <rect width="600" height="800" fill="url(#bg)"/>
+  <circle cx="300" cy="330" r="190" fill="#FFFFFF" opacity="0.5"/>
+  <!-- torso -->
+  <path d="M130 800 C130 655 205 600 300 600 C395 600 470 655 470 800 Z" fill="#3E6ED8"/>
+  <!-- neck -->
+  <rect x="272" y="470" width="56" height="105" rx="24" fill="#DCA374"/>
+  <!-- ears -->
+  <ellipse cx="197" cy="365" rx="13" ry="20" fill="#E9B284"/>
+  <ellipse cx="403" cy="365" rx="13" ry="20" fill="#E9B284"/>
+  <ellipse cx="199" cy="366" rx="6" ry="10" fill="#CC8F60"/>
+  <ellipse cx="401" cy="366" rx="6" ry="10" fill="#CC8F60"/>
+  <!-- face -->
+  <ellipse cx="300" cy="345" rx="102" ry="118" fill="#E9B284"/>
+  <!-- brows -->
+  <path d="M243 322 Q263 310 283 318" stroke="#513B2A" stroke-width="7" fill="none" stroke-linecap="round"/>
+  <path d="M317 318 Q337 310 357 322" stroke="#513B2A" stroke-width="7" fill="none" stroke-linecap="round"/>
+  <!-- closed eyes -->
+  <path d="M248 352 Q264 364 282 354" stroke="#4A3A31" stroke-width="6" fill="none" stroke-linecap="round"/>
+  <path d="M318 354 Q336 364 352 352" stroke="#4A3A31" stroke-width="6" fill="none" stroke-linecap="round"/>
+  <!-- nose -->
+  <path d="M298 368 Q290 392 302 398" stroke="#CC8F60" stroke-width="5" fill="none" stroke-linecap="round"/>
+  <!-- lips -->
+  <path d="M284 428 Q300 439 316 428" stroke="#B96A5E" stroke-width="6" fill="none" stroke-linecap="round"/>
+  <!-- blush -->
+  <ellipse cx="243" cy="398" rx="15" ry="8" fill="#E89180" opacity="0.3"/>
+  <ellipse cx="357" cy="398" rx="15" ry="8" fill="#E89180" opacity="0.3"/>
+  <!-- quiff: tapered cap -->
+  <ellipse cx="300" cy="256" rx="104" ry="42" fill="#513B2A"/>
+  <!-- quiff: voluminous swept top -->
+  <ellipse cx="262" cy="206" rx="74" ry="34" fill="#513B2A" transform="rotate(-16 262 206)"/>
+  <ellipse cx="330" cy="210" rx="30" ry="16" fill="#513B2A" transform="rotate(8 330 210)"/>
+  <!-- quiff highlight -->
+  <path d="M225 205 Q262 185 305 200" stroke="#FFFFFF" stroke-width="7" fill="none" opacity="0.16" stroke-linecap="round"/>
+</svg>

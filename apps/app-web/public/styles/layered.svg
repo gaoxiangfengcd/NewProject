@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 800" width="600" height="800">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F1EFFE"/>
+      <stop offset="1" stop-color="#E2DEFC"/>
+    </linearGradient>
+  </defs>
+  <rect width="600" height="800" fill="url(#bg)"/>
+  <circle cx="300" cy="330" r="190" fill="#FFFFFF" opacity="0.5"/>
+  <!-- torso -->
+  <path d="M130 800 C130 655 205 600 300 600 C395 600 470 655 470 800 Z" fill="#6D4FC4"/>
+  <!-- neck -->
+  <rect x="272" y="470" width="56" height="105" rx="24" fill="#E9B081"/>
+  <!-- back hair mass (long, past shoulders) -->
+  <ellipse cx="300" cy="305" rx="152" ry="165" fill="#6B4429"/>
+  <!-- face -->
+  <ellipse cx="300" cy="345" rx="102" ry="118" fill="#F3C9A6"/>
+  <!-- brows -->
+  <path d="M243 322 Q263 310 283 318" stroke="#6B4429" stroke-width="7" fill="none" stroke-linecap="round"/>
+  <path d="M317 318 Q337 310 357 322" stroke="#6B4429" stroke-width="7" fill="none" stroke-linecap="round"/>
+  <!-- closed eyes -->
+  <path d="M248 352 Q264 364 282 354" stroke="#4A3A31" stroke-width="6" fill="none" stroke-linecap="round"/>
+  <path d="M318 354 Q336 364 352 352" stroke="#4A3A31" stroke-width="6" fill="none" stroke-linecap="round"/>
+  <!-- nose -->
+  <path d="M298 368 Q290 392 302 398" stroke="#DFA673" stroke-width="5" fill="none" stroke-linecap="round"/>
+  <!-- lips -->
+  <path d="M284 428 Q300 440 316 428" stroke="#C05B57" stroke-width="7" fill="none" stroke-linecap="round"/>
+  <!-- blush -->
+  <ellipse cx="243" cy="398" rx="15" ry="8" fill="#E89180" opacity="0.4"/>
+  <ellipse cx="357" cy="398" rx="15" ry="8" fill="#E89180" opacity="0.4"/>
+  <!-- long hair: crown + swept bangs -->
+  <ellipse cx="300" cy="248" rx="110" ry="58" fill="#6B4429"/>
+  <ellipse cx="262" cy="254" rx="80" ry="34" fill="#6B4429" transform="rotate(-12 262 254)"/>
+  <!-- long hair: front strands over shoulders -->
+  <rect x="172" y="360" width="56" height="270" rx="27" fill="#6B4429"/>
+  <rect x="372" y="360" width="56" height="270" rx="27" fill="#6B4429"/>
+  <!-- wave highlights -->
+  <path d="M200 280 Q186 370 208 440" stroke="#FFFFFF" stroke-width="6" fill="none" opacity="0.1" stroke-linecap="round"/>
+  <path d="M400 280 Q414 370 392 440" stroke="#FFFFFF" stroke-width="6" fill="none" opacity="0.1" stroke-linecap="round"/>
+  <path d="M240 222 Q300 196 360 222" stroke="#FFFFFF" stroke-width="7" fill="none" opacity="0.14" stroke-linecap="round"/>
+</svg>

@@ -1,0 +1,71 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* 品牌官网：沉稳靛蓝 + 暖灰底色 */
+    --background: 220 20% 99%;
+    --foreground: 222 28% 12%;
+
+    --primary: 222 56% 20%;
+    --primary-foreground: 0 0% 100%;
+
+    --accent: 221 83% 53%;
+    --accent-foreground: 0 0% 100%;
+    --accent-soft: 221 83% 95%;
+
+    --muted: 220 14% 96%;
+    --muted-foreground: 220 10% 42%;
+
+    --border: 220 14% 90%;
+    --radius: 0.75rem;
+  }
+
+  * {
+    border-color: hsl(var(--border));
+  }
+
+  body {
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground transition hover:opacity-90;
+  }
+
+  .btn-accent {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg bg-accent px-5 py-2.5 text-sm font-medium text-accent-foreground transition hover:opacity-90;
+  }
+
+  .card {
+    @apply rounded-xl border border-border bg-white p-6 shadow-sm transition hover:shadow-md;
+  }
+
+  .eyebrow {
+    @apply text-xs font-semibold uppercase tracking-widest text-muted-foreground;
+  }
+
+  .prose-content h2 {
+    @apply mb-4 mt-8 text-2xl font-bold;
+  }
+
+  .prose-content h3 {
+    @apply mb-3 mt-6 text-xl font-semibold;
+  }
+
+  .prose-content p {
+    @apply mb-4 leading-relaxed text-muted-foreground;
+  }
+
+  .prose-content ul {
+    @apply mb-4 list-disc space-y-2 pl-6 text-muted-foreground;
+  }
+
+  .prose-content a {
+    @apply text-accent underline underline-offset-2 hover:no-underline;
+  }
+}

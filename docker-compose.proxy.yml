@@ -1,0 +1,42 @@
+# 共享反代层：部署一次，处理所有域名路由。
+# 先于业务容器启动：docker compose -f docker-compose.proxy.yml up -d
+#
+# 两种模式（只需运行其中一个）：
+#   A) Caddy 模式（DNS 代理）：VPS 有公网 IP，Cloudflare 橙云代理 → Caddy → app
+#   B) Tunnel 模式：VPS 无公网 IP，cloudflared 隧道 → app（见 deploy/cloudflared.yml）
+#
+# ---- Caddy 模式 ----
+#   docker compose --env-file .env.proxy -f docker-compose.proxy.yml up -d
+# Cloudflare DNS 设 A 记录指向 VPS IP，代理状态开橙云，SSL 模式 Full (strict)。
+# Caddy 自动获取 Let's Encrypt 证书；CF 代理层提供 CDN + DDoS 防护。
+
+services:
+  caddy:
+    image: caddy:2-alpine
+    container_name: imagine-caddy
+    restart: unless-stopped
+    env_file:
+      - .env.proxy
+    ports:
+      - '80:80'
+      - '443:443'
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    networks:
+      - imagine-net
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://127.0.0.1:2019/config/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+networks:
+  default:
+    name: imagine-net
+    external: true
+
+volumes:
+  caddy-data:
+  caddy-config:

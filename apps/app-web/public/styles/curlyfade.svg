@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 800" width="600" height="800">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F0EDFD"/>
+      <stop offset="1" stop-color="#E0DBFA"/>
+    </linearGradient>
+  </defs>
+  <rect width="600" height="800" fill="url(#bg)"/>
+  <circle cx="300" cy="330" r="190" fill="#FFFFFF" opacity="0.5"/>
+  <!-- torso -->
+  <path d="M130 800 C130 655 205 600 300 600 C395 600 470 655 470 800 Z" fill="#4C3FB8"/>
+  <!-- neck -->
+  <rect x="272" y="470" width="56" height="105" rx="24" fill="#B97F55"/>
+  <!-- ears -->
+  <ellipse cx="197" cy="365" rx="13" ry="20" fill="#C98E62"/>
+  <ellipse cx="403" cy="365" rx="13" ry="20" fill="#C98E62"/>
+  <ellipse cx="199" cy="366" rx="6" ry="10" fill="#A9744C"/>
+  <ellipse cx="401" cy="366" rx="6" ry="10" fill="#A9744C"/>
+  <!-- face -->
+  <ellipse cx="300" cy="345" rx="102" ry="118" fill="#C98E62"/>
+  <!-- brows -->
+  <path d="M243 322 Q263 310 283 318" stroke="#262028" stroke-width="7" fill="none" stroke-linecap="round"/>
+  <path d="M317 318 Q337 310 357 322" stroke="#262028" stroke-width="7" fill="none" stroke-linecap="round"/>
+  <!-- closed eyes -->
+  <path d="M248 352 Q264 364 282 354" stroke="#4A3A31" stroke-width="6" fill="none" stroke-linecap="round"/>
+  <path d="M318 354 Q336 364 352 352" stroke="#4A3A31" stroke-width="6" fill="none" stroke-linecap="round"/>
+  <!-- nose -->
+  <path d="M298 368 Q290 392 302 398" stroke="#A9744C" stroke-width="5" fill="none" stroke-linecap="round"/>
+  <!-- lips -->
+  <path d="M284 428 Q300 439 316 428" stroke="#A85A50" stroke-width="6" fill="none" stroke-linecap="round"/>
+  <!-- blush -->
+  <ellipse cx="243" cy="398" rx="15" ry="8" fill="#E89180" opacity="0.3"/>
+  <ellipse cx="357" cy="398" rx="15" ry="8" fill="#E89180" opacity="0.3"/>
+  <!-- curly fade: tight cap -->
+  <ellipse cx="300" cy="262" rx="102" ry="40" fill="#262028"/>
+  <!-- curly fade: curl cluster on top -->
+  <circle cx="236" cy="240" r="30" fill="#262028"/>
+  <circle cx="272" cy="214" r="34" fill="#262028"/>
+  <circle cx="314" cy="204" r="36" fill="#262028"/>
+  <circle cx="354" cy="220" r="32" fill="#262028"/>
+  <circle cx="382" cy="248" r="26" fill="#262028"/>
+  <circle cx="300" cy="242" r="32" fill="#262028"/>
+  <circle cx="258" cy="258" r="26" fill="#262028"/>
+  <circle cx="346" cy="262" r="26" fill="#262028"/>
+  <!-- curl highlights -->
+  <circle cx="272" cy="206" r="8" fill="#FFFFFF" opacity="0.14"/>
+  <circle cx="320" cy="196" r="9" fill="#FFFFFF" opacity="0.14"/>
+  <circle cx="356" cy="214" r="7" fill="#FFFFFF" opacity="0.14"/>
+</svg>

@@ -1,0 +1,117 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* 底色：暖象牙（fashion editorial 纸面感） */
+    --background: 40 33% 98%;
+    --foreground: 24 14% 12%;
+
+    /* 主行动色：暖墨黑（高级感 CTA） */
+    --primary: 24 18% 14%;
+    --primary-foreground: 40 33% 98%;
+
+    /* 强调色：深玫瑰棕（美妆质感） */
+    --accent: 350 42% 44%;
+    --accent-foreground: 40 33% 98%;
+    --accent-soft: 350 45% 94%;
+
+    /* 次色/静音 */
+    --secondary: 36 25% 94%;
+    --secondary-foreground: 24 14% 20%;
+    --muted: 36 20% 95%;
+    --muted-foreground: 30 8% 42%;
+
+    /* 状态 */
+    --destructive: 8 62% 47%;
+    --destructive-foreground: 40 33% 98%;
+    --success: 152 32% 32%;
+    --success-foreground: 40 33% 98%;
+
+    /* 边框 & 输入（发丝级暖灰） */
+    --border: 32 14% 88%;
+    --input: 32 14% 84%;
+    --ring: 350 42% 44%;
+
+    --radius: 0.875rem;
+  }
+
+  .dark {
+    --background: 24 14% 10%;
+    --foreground: 40 33% 96%;
+    --primary: 40 33% 96%;
+    --primary-foreground: 24 14% 12%;
+    --accent: 350 50% 60%;
+    --accent-foreground: 24 14% 10%;
+    --accent-soft: 350 30% 20%;
+    --secondary: 24 12% 18%;
+    --secondary-foreground: 40 33% 96%;
+    --muted: 24 12% 18%;
+    --muted-foreground: 32 10% 62%;
+    --destructive: 8 62% 55%;
+    --destructive-foreground: 40 33% 98%;
+    --success: 152 32% 55%;
+    --success-foreground: 24 14% 10%;
+    --border: 24 10% 22%;
+    --input: 24 10% 28%;
+    --ring: 350 50% 60%;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: 'cv11', 'ss01';
+  }
+}
+
+@layer components {
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-full px-5 py-2.5 text-sm font-medium tracking-wide transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background;
+  }
+
+  .btn-primary {
+    @apply btn bg-primary text-primary-foreground hover:bg-foreground/90 active:scale-[0.98];
+  }
+
+  .btn-accent {
+    @apply btn bg-accent text-accent-foreground hover:bg-accent/90 active:scale-[0.98];
+  }
+
+  .btn-secondary {
+    @apply btn bg-secondary text-secondary-foreground hover:bg-secondary/70;
+  }
+
+  .btn-outline {
+    @apply btn border border-input bg-transparent text-foreground hover:bg-secondary;
+  }
+
+  .btn-ghost {
+    @apply btn text-muted-foreground hover:bg-secondary hover:text-foreground;
+  }
+
+  .btn-destructive {
+    @apply btn bg-destructive text-destructive-foreground hover:bg-destructive/90;
+  }
+
+  .input {
+    @apply w-full rounded-xl border border-input bg-white px-4 py-2.5 text-sm ring-offset-background placeholder:text-muted-foreground/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 focus-visible:border-accent disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .card {
+    @apply rounded-2xl border border-border bg-white p-5;
+  }
+
+  /* 杂志感小字标签 */
+  .eyebrow {
+    @apply text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground;
+  }
+
+  /* 衬线显示标题 */
+  .font-display {
+    font-family: var(--font-serif), Georgia, 'Times New Roman', serif;
+  }
+}

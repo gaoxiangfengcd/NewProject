@@ -1,0 +1,77 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* 创意工作室：冷调近白 + 深靛主色 + 电光紫强调色 */
+    --background: 250 60% 99%;
+    --foreground: 252 32% 12%;
+
+    --primary: 252 54% 18%;
+    --primary-foreground: 0 0% 100%;
+
+    --accent: 258 90% 60%;
+    --accent-foreground: 0 0% 100%;
+    --accent-soft: 258 90% 95%;
+
+    --secondary: 252 30% 95%;
+    --secondary-foreground: 252 32% 20%;
+    --muted: 252 24% 95%;
+    --muted-foreground: 252 10% 42%;
+
+    --destructive: 354 70% 48%;
+    --destructive-foreground: 0 0% 100%;
+    --success: 152 32% 32%;
+    --success-foreground: 0 0% 100%;
+
+    --border: 255 20% 90%;
+    --input: 255 18% 86%;
+    --ring: 258 90% 60%;
+
+    --radius: 0.875rem;
+  }
+
+  * {
+    border-color: hsl(var(--border));
+  }
+
+  body {
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 rounded-full border border-border bg-white px-5 py-2.5 text-sm font-medium text-foreground transition hover:border-accent/60 hover:text-accent;
+  }
+
+  .card {
+    @apply rounded-2xl border border-border bg-white shadow-[0_8px_40px_-16px_rgba(79,70,229,0.25)];
+  }
+
+  .input-base {
+    @apply w-full rounded-xl border border-input bg-white px-4 py-3 text-sm outline-none transition placeholder:text-muted-foreground/70 focus:border-accent focus:ring-2 focus:ring-accent/20;
+  }
+
+  .chip {
+    @apply rounded-full border px-4 py-1.5 text-sm transition;
+  }
+
+  .chip-active {
+    @apply border-transparent bg-accent text-accent-foreground shadow-sm;
+  }
+
+  .chip-idle {
+    @apply border-border bg-white text-muted-foreground hover:border-accent/50 hover:text-foreground;
+  }
+
+  .eyebrow {
+    @apply text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground;
+  }
+}

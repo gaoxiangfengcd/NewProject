@@ -1,0 +1,82 @@
+# Caddy 反代配置（Cloudflare 适配版）。
+# 域名通过环境变量注入，无需修改本文件。
+#
+# Cloudflare 适配说明：
+# - DNS 代理模式（橙云）：CF 终结 TLS → Caddy 再终结 TLS（Full strict）
+#   Caddy 仍自动获取 Let's Encrypt 证书；CF 的 ACME HTTP-01 挑战会被透传。
+# - CF 注入 CF-Connecting-IP（真实客户端 IP），Caddy 透传给后端；
+#   后端 rate-limit.ts 优先读此头，X-Forwarded-For 为回退。
+# - trusted_proxies 让 Caddy 信任 CF 代理段，正确解析 X-Forwarded-For 链。
+# - AI 出图为同步长请求，全局放宽到 120s 避免 504。
+# - /_next/static/* 由 CF 边缘缓存（Next.js 已设 immutable 缓存头）。
+
+{
+	email {$ACME_EMAIL}
+	servers {
+		timeouts 120s
+	}
+}
+
+# ---- Cloudflare 代理段（IPv4 + IPv6，来源 cloudflare.com/ips）----
+# 用于 trusted_proxies，让 Caddy 信任来自 CF 的 X-Forwarded-For
+(cloudflare_proxies) {
+	trusted_proxies \
+		173.245.48.0/20 \
+		103.21.244.0/22 \
+		103.22.200.0/22 \
+		103.31.4.0/22 \
+		141.101.64.0/18 \
+		108.162.192.0/18 \
+		190.93.240.0/20 \
+		188.114.96.0/20 \
+		197.234.240.0/22 \
+		198.41.128.0/17 \
+		162.158.0.0/15 \
+		104.16.0.0/13 \
+		104.24.0.0/14 \
+		172.64.0.0/13 \
+		131.0.72.0/22 \
+		2400:cb00::/32 \
+		2606:4700::/32 \
+		2803:f800::/32 \
+		2405:b500::/32 \
+		2405:8100::/32 \
+		2a06:98c0::/29 \
+		2c0f:f248::/32
+}
+
+# app-official（官网）
+{$OFFICIAL_DOMAIN} {
+	@static {
+		path /_next/static/*
+	}
+	header @static Cache-Control "public, max-age=31536000, immutable"
+
+	reverse_proxy app-official:3002 {
+		import cloudflare_proxies
+		header_up X-Real-IP {http.request.header.CF-Connecting-IP}
+	}
+}
+
+# app-web（发型试穿）—— 先不部署时 Caddy 会返回 502，不影响其他站点
+{$WEB_DOMAIN} {
+	reverse_proxy app-web:3000 {
+		import cloudflare_proxies
+		# 透传 CF 注入的真实客户端 IP（后端优先读此头）
+		header_up X-Real-IP {http.request.header.CF-Connecting-IP}
+	}
+}
+
+# app-photomeme（创意图片）
+{$PHOTOMEME_DOMAIN} {
+	# Next.js 静态资源：CF 边缘缓存（Next.js 已设 immutable + max-age=1y）
+	@static {
+		path /_next/static/*
+	}
+	header @static Cache-Control "public, max-age=31536000, immutable"
+
+	reverse_proxy app-photomeme:3001 {
+		import cloudflare_proxies
+		header_up X-Real-IP {http.request.header.CF-Connecting-IP}
+	}
+}

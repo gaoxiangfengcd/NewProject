@@ -1,0 +1,25 @@
+# 依赖与构建产物（镜像内重新安装/构建，避免平台不匹配：macOS 的 .next 与 Prisma 引擎）
+**/node_modules
+**/.next
+**/dist
+**/tsconfig.tsbuildinfo
+
+# Prisma 生成产物（镜像内按 MySQL schema 重新 generate，避免带入本地 SQLite 引擎）
+apps/app-web/src/db/generated
+
+# 本地数据库与环境变量（生产配置通过 compose env_file 注入）
+**/*.db
+**/.env
+**/.env.local
+**/.env.*.local
+
+# 日志 / 缓存 / VCS / IDE
+**/*.log
+.git
+.trae
+.next
+coverage
+
+# 本地存储
+apps/app-web/public/storage/*
+!apps/app-web/public/storage/.gitkeep

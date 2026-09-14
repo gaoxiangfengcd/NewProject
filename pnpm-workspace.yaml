@@ -1,0 +1,20 @@
+packages:
+  - 'apps/*'
+  - 'packages/*'
+
+# pnpm 11: 用 allowBuilds 替代 onlyBuiltDependencies。
+# strictDepBuilds 默认 true，有 build script 的包必须在此 map 中明确 true/false。
+# 骨架阶段代码全是 throw 占位，不实际 import 这些 native 包，全设 false。
+# 未来实现 auth 时 argon2 需 build，改为 true 即可。
+allowBuilds:
+  esbuild: false
+  '@swc/core': false
+  argon2: false
+  core-js: false
+  protobufjs: false
+  '@prisma/client': true
+  '@prisma/engines': true
+  msgpackr-extract: false
+  prisma: true
+  unrs-resolver: false
+  sharp: true

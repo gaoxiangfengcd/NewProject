@@ -1,0 +1,131 @@
+# app-web 独立编排（MySQL + Redis + app-web + worker + 备份 + 存储清理）。
+# 先部署 app-photomeme 后再加这个：
+#   docker compose --env-file .env.web -f docker-compose.web.yml up -d --build
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: web-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    volumes:
+      - web-mysql-data:/var/lib/mysql
+    networks:
+      - imagine-net
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h127.0.0.1 -uroot -p\"$$MYSQL_ROOT_PASSWORD\" --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  redis:
+    image: redis:7-alpine
+    container_name: web-redis
+    restart: unless-stopped
+    command: redis-server --requirepass ${REDIS_PASSWORD} --appendonly yes
+    volumes:
+      - web-redis-data:/data
+    networks:
+      - imagine-net
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a \"$$REDIS_PASSWORD\" ping | grep -q PONG"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  app-web:
+    build:
+      context: .
+      dockerfile: apps/app-web/Dockerfile
+    image: imagine-web:local
+    container_name: imagine-web
+    env_file:
+      - .env.web
+    restart: unless-stopped
+    networks:
+      - imagine-net
+    working_dir: /app/apps/app-web
+    # 启动时幂等同步表结构（有迁移文件后可换 prisma migrate deploy）
+    command: sh -c "pnpm db:push:mysql && pnpm start"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:3000/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 60s
+
+  worker:
+    image: imagine-web:local
+    container_name: imagine-worker
+    env_file:
+      - .env.web
+    restart: unless-stopped
+    networks:
+      - imagine-net
+    working_dir: /app/apps/app-web
+    command: pnpm worker
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  storage-cleanup:
+    image: imagine-web:local
+    container_name: imagine-storage-cleanup
+    env_file:
+      - .env.web
+    restart: unless-stopped
+    networks:
+      - imagine-net
+    working_dir: /app/apps/app-web
+    # 启动 5 分钟后首次清理，之后每 24h 一次
+    command: sh -c "sleep 300; while true; do pnpm cleanup:storage; sleep 86400; done"
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  db-backup:
+    image: mysql:8.0
+    container_name: imagine-db-backup
+    restart: unless-stopped
+    env_file:
+      - .env.web
+    environment:
+      MYSQL_HOST: web-mysql
+      MYSQL_USER: root
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_PWD: ${MYSQL_ROOT_PASSWORD}
+      BACKUP_RETENTION_DAYS: '7'
+    command: ["sh", "/scripts/backup-mysql.sh"]
+    volumes:
+      - ./deploy/backup-mysql.sh:/scripts/backup-mysql.sh:ro
+      - web-db-backups:/backups
+    networks:
+      - imagine-net
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+networks:
+  default:
+    name: imagine-net
+    external: true
+
+volumes:
+  web-mysql-data:
+  web-redis-data:
+  web-db-backups:
