@@ -1,7 +1,6 @@
 import type { Metadata } from 'next'
 import { Inter, Noto_Serif_SC } from 'next/font/google'
 import Link from 'next/link'
-import Script from 'next/script'
 import './globals.css'
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans' })
@@ -55,12 +54,13 @@ export default function RootLayout({
 }): React.ReactElement {
   return (
     <html lang="zh-CN">
-      <Script
-        strategy="beforeInteractive"
-        src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1830259629636903"
-        crossOrigin="anonymous"
-      />
       <body className={`${inter.variable} ${notoSerifSC.variable} font-sans`}>
+        {/* Google AdSense：React 会将 async script 提升到 <head>，SSR 输出原始标签供爬虫验证 */}
+        <script
+          async
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1830259629636903"
+          crossOrigin="anonymous"
+        />
         <header className="sticky top-0 z-50 w-full border-b border-border bg-background/90 backdrop-blur-md">
           <div className="mx-auto flex h-16 max-w-5xl items-center justify-between px-4 sm:px-6">
             <Link href="/" className="flex items-center gap-2">
