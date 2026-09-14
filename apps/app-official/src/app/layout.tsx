@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { Inter, Noto_Serif_SC } from 'next/font/google'
 import Link from 'next/link'
+import Script from 'next/script'
 import { ComingSoonToast } from '@/components/ComingSoonToast'
 import './globals.css'
 
@@ -55,6 +56,12 @@ export default function RootLayout({
 }): React.ReactElement {
   return (
     <html lang="zh-CN">
+      <Script
+        async
+        strategy="afterInteractive"
+        src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1830259629636903"
+        crossOrigin="anonymous"
+      />
       <body className={`${inter.variable} ${notoSerifSC.variable} font-sans`}>
         <header className="sticky top-0 z-50 w-full border-b border-border bg-background/90 backdrop-blur-md">
           <div className="mx-auto flex h-16 max-w-5xl items-center justify-between px-4 sm:px-6">

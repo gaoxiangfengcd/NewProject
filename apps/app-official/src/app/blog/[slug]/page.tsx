@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { getAllPosts, getPostBySlug } from '@/lib/posts'
+import { AdSlot } from '@/components/AdSlot'
 
 export function generateStaticParams() {
   return getAllPosts().map((post) => ({ slug: post.slug }))
@@ -81,6 +82,9 @@ export default function BlogPostPage({
           return <p key={i}>{block.content as string}</p>
         })}
       </div>
+
+      {/* 文章尾部广告 */}
+      <AdSlot className="my-10" />
 
       {/* 相关文章 */}
       {related.length > 0 && (

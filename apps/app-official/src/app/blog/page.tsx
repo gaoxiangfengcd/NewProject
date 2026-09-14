@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { getAllPosts } from '@/lib/posts'
+import { AdSlot } from '@/components/AdSlot'
 
 export const metadata: Metadata = {
   title: '博客',
@@ -16,6 +17,8 @@ export default function BlogPage(): React.ReactElement {
       <p className="mt-3 text-muted-foreground">
         分享我们在 AI 创意工具开发中的技术实践、产品思考和行业观察。
       </p>
+
+      <AdSlot className="mt-6" />
 
       <div className="mt-10 space-y-8">
         {allPosts.map((post) => (
