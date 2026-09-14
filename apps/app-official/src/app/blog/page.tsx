@@ -24,7 +24,6 @@ export default function BlogPage(): React.ReactElement {
         {allPosts.map((post) => (
           <article key={post.slug} className="border-b border-border pb-8">
             <Link href={`/blog/${post.slug}`} className="group block">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={post.cover}
                 alt={post.coverAlt}

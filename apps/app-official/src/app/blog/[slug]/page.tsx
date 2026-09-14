@@ -63,7 +63,6 @@ export default function BlogPostPage({
       </div>
 
       {/* 封面图 */}
-      {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={post.cover}
         alt={post.coverAlt}

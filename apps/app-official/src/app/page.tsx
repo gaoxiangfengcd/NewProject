@@ -115,7 +115,6 @@ export default function HomePage(): React.ReactElement {
         </p>
         <div className="mt-10 grid items-center gap-4 sm:grid-cols-[1fr_auto_1fr]">
           <figure className="card !p-3">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/images/demo-before.jpg"
               alt="MeMeGo 效果演示：原始照片"
@@ -130,7 +129,6 @@ export default function HomePage(): React.ReactElement {
             →
           </div>
           <figure className="card !p-3">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/images/demo-after.jpg"
               alt="MeMeGo 生成效果：铅笔素描风趣味漫画"
