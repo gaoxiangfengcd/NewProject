@@ -1,0 +1,39 @@
+# MeMeGo 单站点反代（配套 deploy/Caddyfile.memego）。
+# 只跑 memego 时用这个，避免主 proxy 编排里未部署域名导致 Caddy 解析失败。
+#
+#   docker network create imagine-net
+#   docker compose --env-file .env.proxy -f docker-compose.proxy.memego.yml up -d
+#
+# 需要 .env.proxy 里设置：MEMEGO_DOMAIN / ACME_EMAIL
+# Cloudflare：DNS 建 A 记录指向 VPS 公网 IP，代理状态开橙云，SSL 模式 Full (strict)。
+
+services:
+  caddy:
+    image: caddy:2-alpine
+    container_name: memego-caddy
+    restart: unless-stopped
+    env_file:
+      - .env.proxy
+    ports:
+      - '80:80'
+      - '443:443'
+    volumes:
+      - ./deploy/Caddyfile.memego:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    networks:
+      - imagine-net
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://127.0.0.1:2019/config/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+networks:
+  default:
+    name: imagine-net
+    external: true
+
+volumes:
+  caddy-data:
+  caddy-config:
