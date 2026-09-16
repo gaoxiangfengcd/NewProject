@@ -93,6 +93,9 @@ export default function RootLayout({
               <Link href="/terms" className="transition hover:text-primary">
                 Terms
               </Link>
+              <Link href="/refund" className="transition hover:text-primary">
+                Refunds
+              </Link>
               <a href={`mailto:${CONTACT_EMAIL}`} className="transition hover:text-primary">
                 Contact
               </a>

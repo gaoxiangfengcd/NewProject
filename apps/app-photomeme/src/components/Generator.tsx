@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import Link from 'next/link'
 import { UploadZone } from './UploadZone'
 import { StylePicker } from './StylePicker'
 import { ResultPanel } from './ResultPanel'
@@ -393,6 +394,15 @@ export function Generator(): React.ReactElement {
                   </button>
                 )}
               </div>
+              {/* Paddle 域名审核要求：退款政策必须在结账入口处可见 */}
+              <p className="text-xs text-muted-foreground">
+                Payments are handled by Paddle.com (Merchant of Record). Unused credits are
+                refundable within 14 days — see the{' '}
+                <Link href="/refund" className="font-medium text-primary underline-offset-2 hover:underline">
+                  refund policy
+                </Link>
+                .
+              </p>
             </div>
           )}
 
