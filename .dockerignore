@@ -8,10 +8,14 @@
 apps/app-web/src/db/generated
 
 # 本地数据库与环境变量（生产配置通过 compose env_file 注入）
+# 注意：真实 env 绝不能进镜像层，否则密钥随镜像分发
 **/*.db
 **/.env
 **/.env.local
 **/.env.*.local
+**/.env.photomeme
+**/.env.proxy
+**/.env.web
 
 # 日志 / 缓存 / VCS / IDE
 **/*.log
@@ -19,7 +23,9 @@ apps/app-web/src/db/generated
 .trae
 .next
 coverage
+.workbuddy
 
 # 本地存储
 apps/app-web/public/storage/*
 !apps/app-web/public/storage/.gitkeep
+apps/app-photomeme/storage-data

@@ -1,4 +1,4 @@
-import IORedis, { type Redis } from 'ioredis'
+import { getRedis } from './redis'
 
 /**
  * 生成接口的 IP 固定窗口限流（Redis 实现）。
@@ -15,22 +15,6 @@ import IORedis, { type Redis } from 'ioredis'
 
 const DEFAULT_WINDOW_SEC = 60
 const DEFAULT_MAX = 5
-
-let redisClient: Redis | null = null
-
-function getRedis(): Redis | null {
-  const url = process.env.REDIS_URL
-  if (!url) return null // 本地开发：未配置即关闭限流
-  if (!redisClient) {
-    redisClient = new IORedis(url, {
-      // 限流是短操作：快速失败，不要让请求挂在 Redis 重连队列上
-      maxRetriesPerRequest: 1,
-      enableOfflineQueue: false,
-      connectTimeout: 2000,
-    })
-  }
-  return redisClient
-}
 
 /**
  * 从反向代理注入的头中取真实客户端 IP。

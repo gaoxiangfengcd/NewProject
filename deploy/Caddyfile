@@ -67,15 +67,21 @@
 	}
 }
 
-# app-photomeme（创意图片）
-{$PHOTOMEME_DOMAIN} {
-	# Next.js 静态资源：CF 边缘缓存（Next.js 已设 immutable + max-age=1y）
+# memego（照片夸张化 meme 生成器）
+{$MEMEGO_DOMAIN} {
+	# Next.js 静态资产：CF 边缘缓存（Next.js 已设 immutable + max-age=1y）
 	@static {
 		path /_next/static/*
 	}
 	header @static Cache-Control "public, max-age=31536000, immutable"
 
-	reverse_proxy app-photomeme:3001 {
+	# 分享图片对象不可变（每次生成都是新 key）：边缘缓存 7 天
+	@shares {
+		path /api/storage/shares/*
+	}
+	header @shares Cache-Control "public, max-age=604800, immutable"
+
+	reverse_proxy memego:3001 {
 		import cloudflare_proxies
 		header_up X-Real-IP {http.request.header.CF-Connecting-IP}
 	}

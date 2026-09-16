@@ -3,34 +3,33 @@ import type { AsyncResult } from '@repo/common'
 /** 支持的画幅比例（透传给模型的 aspect_ratio） */
 export type ImageSize = '1:1' | '3:2' | '2:3' | '4:3' | '3:4' | '16:9' | '9:16'
 
-/** 预置视觉风格 id（promptSuffix 由 styles.ts 维护） */
-export type ImageStyleId =
-  | 'auto'
-  | 'realistic'
-  | 'anime'
-  | 'oil-painting'
-  | 'watercolor'
-  | 'cyberpunk'
-  | '3d-render'
-  | 'pixel'
-  | 'line-art'
-
-export interface ImageStyle {
-  id: ImageStyleId
-  /** 追加到用户 prompt 后的英文风格约束（模型对英文响应更稳定） */
-  promptSuffix: string
-}
-
 export interface GenerateImageOpts {
-  /** 用户原始画面描述（已 trim、已过滤控制字符） */
+  /**
+   * 最终 prompt。
+   * 风格模板 / 身份锁定约束由 app 层组装完成后传入，
+   * provider 只负责透传，不内置产品风格表。
+   */
   prompt: string
-  style?: ImageStyleId
   size?: ImageSize
   seed?: number
+  /**
+   * 图生图参考图：公网可访问 URL 或 data URI。
+   * 缺省为纯文生图；提供时走模型的 image-to-image 入参。
+   */
+  inputImage?: string
+  /**
+   * 参考图影响强度（0..1，对应多数模型的 prompt_strength / denoise）。
+   * 值越大结果越自由、越夸张；值越小越贴近原图。
+   */
+  promptStrength?: number
+  /**
+   * 覆盖 provider 默认模型。免费档 / 付费档可以走不同 Replicate 模型。
+   */
+  model?: string
 }
 
 export interface GeneratedImage {
-  /** 生成结果图 URL（模型托管地址或 mock 占位图） */
+  /** 生成结果图 URL（模型托管地址或 mock 占位图/回显图） */
   url: string
   /** 实际提供方名（replicate | mock） */
   provider: string

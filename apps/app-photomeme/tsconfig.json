@@ -19,12 +19,16 @@
       ],
       "@repo/image-gen": [
         "../../packages/image-gen/src/index.ts"
+      ],
+      "@repo/storage": [
+        "../../packages/storage/src/index.ts"
       ]
     },
     "incremental": true
   },
   "include": [
     "src",
+    "scripts",
     "next-env.d.ts",
     ".next/types/**/*.ts"
   ],

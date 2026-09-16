@@ -1,110 +1,319 @@
 import { NextResponse } from 'next/server'
-import { getProvider, IMAGE_STYLES } from '@repo/image-gen'
-import type { ImageSize, ImageStyleId } from '@repo/image-gen'
+import { getProvider as getImageProvider } from '@repo/image-gen'
+import { getProvider as getStorageProvider } from '@repo/storage'
 import { logger } from '@repo/common'
-import { MAX_PROMPT_LENGTH, sanitizePrompt } from '@/lib/prompt'
 import { checkGenerateRateLimit } from '@/lib/rate-limit'
+import { buildExaggerationPrompt, sanitizeTwist } from '@/lib/prompt'
+import { getStyleOrDefault } from '@/lib/styles'
+import { validateImage } from '@/lib/validation'
+import { prepareGeneratedImage } from '@/lib/watermark'
+import { modelForTier, type GenerationTier } from '@/lib/billing'
+import {
+  consumePaidCredit,
+  getQuotaSnapshot,
+  refundFreeSlot,
+  refundPaidCredit,
+  reserveFreeSlot,
+} from '@/lib/quota'
+import { applyDevCreditsCookie, applyWalletCookie, ensureWalletId } from '@/lib/wallet'
+import {
+  newShareId,
+  shareInputKey,
+  shareOutputKey,
+  storageUrl,
+  writeShareMeta,
+  type ShareMeta,
+} from '@/lib/share'
 
 export const runtime = 'nodejs'
-// 图片模型推理可能较慢（flux-schnell 通常数秒，复杂模型更久）
 export const maxDuration = 60
 
-const ALLOWED_SIZES: readonly ImageSize[] = [
-  '1:1',
-  '3:2',
-  '2:3',
-  '4:3',
-  '3:4',
-  '16:9',
-  '9:16',
-]
+function jsonError(
+  status: number,
+  code: string,
+  message: string,
+  extra?: Record<string, unknown>,
+): NextResponse {
+  return NextResponse.json({ ok: false, error: { code, message }, ...extra }, { status })
+}
 
-const ALLOWED_STYLE_IDS = new Set<ImageStyleId>(IMAGE_STYLES.map((style) => style.id))
+function attachSession(
+  res: NextResponse,
+  wallet: { id: string; created: boolean },
+  cookieCredits?: number,
+): NextResponse {
+  if (wallet.created) applyWalletCookie(res, wallet.id)
+  if (typeof cookieCredits === 'number') applyDevCreditsCookie(res, cookieCredits)
+  return res
+}
 
-function jsonError(status: number, code: string, message: string): NextResponse {
-  return NextResponse.json({ ok: false, error: { code, message } }, { status })
+async function fetchAsBuffer(url: string): Promise<Buffer> {
+  if (url.startsWith('data:')) {
+    const base64 = url.slice(url.indexOf(',') + 1)
+    return Buffer.from(base64, 'base64')
+  }
+  const res = await fetch(url, { signal: AbortSignal.timeout(30_000) })
+  if (!res.ok) throw new Error(`RESULT_FETCH_FAILED:${res.status}`)
+  return Buffer.from(await res.arrayBuffer())
+}
+
+function quotaUnavailable(error: 'redis_required' | 'redis_unavailable'): NextResponse {
+  return jsonError(
+    503,
+    'SERVICE_UNAVAILABLE',
+    'The generator is temporarily unavailable. Please try again later.',
+    { reason: error },
+  )
 }
 
 /**
- * POST /api/generate
- * body: { prompt: string, style?: ImageStyleId, size?: ImageSize }
- * 统一响应：{ ok: true, data: GeneratedImage } | { ok: false, error: { code, message } }
+ * POST /api/generate  (multipart/form-data)
+ * fields: file · style? · twist? · tier=free|paid
+ *
+ * free：每 IP 每天 1 次，便宜模型 + 低清满幅水印
+ * paid：扣 1 次付费额度，好模型 + 高清无水印
+ * Generate again / 换 vibe 都是一次新的生成，按当时剩余额度计。
  */
 export async function POST(req: Request): Promise<NextResponse> {
-  // P0：先限流再解析请求体，防止匿名刷量耗尽图片模型 API 额度
+  const wallet = ensureWalletId(req)
+
   const rateLimit = await checkGenerateRateLimit(req)
   if (rateLimit.limited) {
     const status = rateLimit.status ?? 429
     const message =
       rateLimit.reason === 'redis_unavailable'
-        ? '生成服务暂不可用，请稍后重试'
-        : '操作过于频繁，请稍后再试'
-    return NextResponse.json(
-      { ok: false, error: { code: status === 429 ? 'RATE_LIMITED' : 'SERVICE_UNAVAILABLE', message } },
-      {
-        status,
-        headers: {
-          'Retry-After': String(rateLimit.resetAfterSec),
-          'X-RateLimit-Limit': String(rateLimit.limit),
-          'X-RateLimit-Remaining': String(rateLimit.remaining),
-        },
-      },
+        ? 'The generator is temporarily unavailable. Please try again later.'
+        : 'You are generating too fast. Please wait a moment and try again.'
+    return attachSession(
+      jsonError(status, status === 429 ? 'RATE_LIMITED' : 'SERVICE_UNAVAILABLE', message),
+      wallet,
     )
   }
 
-  let body: unknown
+  let form: FormData
   try {
-    body = await req.json()
+    form = await req.formData()
   } catch {
-    return jsonError(400, 'INVALID_JSON', '请求体不是合法 JSON')
-  }
-
-  const input = (body ?? {}) as { prompt?: unknown; style?: unknown; size?: unknown }
-
-  const prompt = sanitizePrompt(input.prompt)
-  if (!prompt) {
-    return jsonError(
-      400,
-      'INVALID_PROMPT',
-      `画面描述必填，且长度需在 1-${MAX_PROMPT_LENGTH} 字之间`,
+    return attachSession(
+      jsonError(400, 'INVALID_FORM', 'Please upload the image as multipart form data.'),
+      wallet,
     )
   }
 
-  let style: ImageStyleId | undefined
-  if (input.style !== undefined && input.style !== null && input.style !== '') {
-    if (typeof input.style !== 'string' || !ALLOWED_STYLE_IDS.has(input.style as ImageStyleId)) {
-      return jsonError(400, 'INVALID_STYLE', '不支持的风格参数')
-    }
-    style = input.style as ImageStyleId
+  const file = form.get('file')
+  if (!file || !(file instanceof File)) {
+    return attachSession(jsonError(400, 'FILE_REQUIRED', 'An image file is required.'), wallet)
   }
 
-  let size: ImageSize | undefined
-  if (input.size !== undefined && input.size !== null && input.size !== '') {
-    if (typeof input.size !== 'string' || !ALLOWED_SIZES.includes(input.size as ImageSize)) {
-      return jsonError(400, 'INVALID_SIZE', '不支持的画幅比例')
+  const style = getStyleOrDefault(String(form.get('style') ?? ''))
+  const twist = sanitizeTwist(form.get('twist'))
+  if (twist === null) {
+    return attachSession(jsonError(400, 'INVALID_TWIST', 'Your twist is too long.'), wallet)
+  }
+
+  const requestedTier: GenerationTier = String(form.get('tier') ?? 'free') === 'paid' ? 'paid' : 'free'
+
+  const validation = validateImage({ type: file.type, size: file.size })
+  if (!validation.ok) {
+    return attachSession(jsonError(400, validation.code, validation.message), wallet)
+  }
+
+  const inputBuffer = Buffer.from(await file.arrayBuffer())
+  if (inputBuffer.length === 0) {
+    return attachSession(jsonError(400, 'EMPTY_FILE', 'The uploaded image is empty.'), wallet)
+  }
+
+  let tier: GenerationTier = requestedTier
+  let cookieCredits: number | undefined
+  let reservedFree = false
+  let consumedPaid = false
+
+  if (requestedTier === 'paid') {
+    const paid = await consumePaidCredit(req, wallet.id)
+    if (!paid.ok) {
+      if (paid.error === 'no_credits') {
+        const quota = await getQuotaSnapshot(req, wallet.id)
+        return attachSession(
+          jsonError(
+            402,
+            'PAYMENT_REQUIRED',
+            'Unlock HD to generate with the full-quality model — no watermark.',
+            { quota },
+          ),
+          wallet,
+        )
+      }
+      return attachSession(quotaUnavailable(paid.error), wallet)
     }
-    size = input.size as ImageSize
+    consumedPaid = true
+    cookieCredits = paid.cookieCredits
+  } else {
+    const free = await reserveFreeSlot(req)
+    if (!free.ok) {
+      if (free.error === 'quota_exceeded') {
+        const quota = await getQuotaSnapshot(req, wallet.id)
+        return attachSession(
+          jsonError(
+            402,
+            'QUOTA_EXCEEDED',
+            'Your free preview for today is used. Unlock HD or buy another generation.',
+            { quota },
+          ),
+          wallet,
+        )
+      }
+      return attachSession(quotaUnavailable(free.error), wallet)
+    }
+    reservedFree = true
+    tier = 'free'
+  }
+
+  let storage
+  try {
+    storage = getStorageProvider()
+  } catch {
+    if (reservedFree) await refundFreeSlot(req)
+    if (consumedPaid) cookieCredits = await refundPaidCredit(wallet.id, cookieCredits)
+    return attachSession(
+      jsonError(503, 'STORAGE_UNAVAILABLE', 'The generator is temporarily unavailable.'),
+      wallet,
+      cookieCredits,
+    )
+  }
+
+  const id = newShareId()
+  const inputKey = shareInputKey(id, validation.ext)
+
+  const inputUpload = await storage.upload(inputKey, inputBuffer, {
+    contentType: validation.mime,
+  })
+  if (!inputUpload.ok) {
+    if (reservedFree) await refundFreeSlot(req)
+    if (consumedPaid) cookieCredits = await refundPaidCredit(wallet.id, cookieCredits)
+    logger.error('input upload failed', { id, message: inputUpload.error.message })
+    return attachSession(
+      jsonError(502, 'UPLOAD_FAILED', 'Could not store the uploaded image.'),
+      wallet,
+      cookieCredits,
+    )
   }
 
   try {
-    const provider = getProvider()
-    const result = await provider.generate({ prompt, style, size })
+    const dataUri = `data:${validation.mime};base64,${inputBuffer.toString('base64')}`
+    const provider = getImageProvider()
+    const prompt = buildExaggerationPrompt(style, twist || undefined)
+    const model = modelForTier(tier)
+
+    const result = await provider.generate({
+      prompt,
+      inputImage: dataUri,
+      promptStrength: style.strength,
+      size: '1:1',
+      model,
+    })
 
     if (!result.ok) {
+      if (reservedFree) await refundFreeSlot(req)
+      if (consumedPaid) cookieCredits = await refundPaidCredit(wallet.id, cookieCredits)
       logger.error('image generation failed', {
+        id,
         provider: result.error.code,
         details: result.error.details,
       })
-      return jsonError(result.error.status, result.error.code, result.error.message)
+      return attachSession(
+        jsonError(
+          502,
+          'GENERATION_FAILED',
+          'Our artist had a brain freeze. Please try again in a moment.',
+        ),
+        wallet,
+        cookieCredits,
+      )
     }
 
-    return NextResponse.json({ ok: true, data: result.value })
-  } catch (e) {
-    // getProvider() 配置缺失等同步错误
-    logger.error('generate route error', {
-      message: e instanceof Error ? e.message : String(e),
+    let outputBuffer: Buffer
+    try {
+      outputBuffer = await fetchAsBuffer(result.value.url)
+    } catch (e) {
+      if (reservedFree) await refundFreeSlot(req)
+      if (consumedPaid) cookieCredits = await refundPaidCredit(wallet.id, cookieCredits)
+      logger.error('result fetch failed', {
+        id,
+        message: e instanceof Error ? e.message : String(e),
+      })
+      return attachSession(
+        jsonError(502, 'RESULT_FETCH_FAILED', 'Could not download the generated image.'),
+        wallet,
+        cookieCredits,
+      )
+    }
+
+    const prepared = await prepareGeneratedImage(outputBuffer, tier)
+    const outputKey = shareOutputKey(id, prepared.ext)
+
+    const outputUpload = await storage.upload(outputKey, prepared.buffer, {
+      contentType: prepared.contentType,
     })
-    const message = e instanceof Error ? e.message : '生成服务暂不可用'
-    return jsonError(500, 'GENERATION_ERROR', message)
+    if (!outputUpload.ok) {
+      if (reservedFree) await refundFreeSlot(req)
+      if (consumedPaid) cookieCredits = await refundPaidCredit(wallet.id, cookieCredits)
+      logger.error('output upload failed', { id, message: outputUpload.error.message })
+      return attachSession(
+        jsonError(502, 'UPLOAD_FAILED', 'Could not store the generated image.'),
+        wallet,
+        cookieCredits,
+      )
+    }
+
+    const meta: ShareMeta = {
+      id,
+      style: style.id,
+      twist: twist || null,
+      inputKey,
+      outputKey,
+      inputUrl: storageUrl(inputKey),
+      outputUrl: storageUrl(outputKey),
+      createdAt: new Date().toISOString(),
+      tier,
+    }
+    await writeShareMeta(storage, meta)
+
+    const quota = await getQuotaSnapshot(req, wallet.id)
+    if (typeof cookieCredits === 'number') quota.paidCredits = cookieCredits
+
+    logger.info('meme generated', {
+      id,
+      style: style.id,
+      tier,
+      provider: result.value.provider,
+      model: result.value.model,
+      bytes: prepared.buffer.length,
+    })
+
+    return attachSession(
+      NextResponse.json({
+        ok: true,
+        data: {
+          shareId: id,
+          inputUrl: meta.inputUrl,
+          outputUrl: meta.outputUrl,
+          style: style.id,
+          twist: twist || '',
+          tier,
+          quota,
+        },
+      }),
+      wallet,
+      cookieCredits,
+    )
+  } catch (e) {
+    if (reservedFree) await refundFreeSlot(req)
+    if (consumedPaid) cookieCredits = await refundPaidCredit(wallet.id, cookieCredits)
+    logger.error('generate route error', { id, message: e instanceof Error ? e.message : String(e) })
+    return attachSession(
+      jsonError(500, 'GENERATION_ERROR', 'Something went wrong. Please try again.'),
+      wallet,
+      cookieCredits,
+    )
   }
 }

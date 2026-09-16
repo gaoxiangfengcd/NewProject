@@ -4,18 +4,16 @@ import { ReplicateProvider } from './providers/replicate'
 
 export type {
   ImageSize,
-  ImageStyleId,
-  ImageStyle,
   GenerateImageOpts,
   GeneratedImage,
   ImageGenProvider,
 } from './types'
-export { IMAGE_STYLES, buildStyledPrompt } from './styles'
 export { MockProvider } from './providers/mock'
 export { ReplicateProvider } from './providers/replicate'
 export type { ReplicateConfig } from './providers/replicate'
 
-const DEFAULT_REPLICATE_MODEL = 'black-forest-labs/flux-schnell'
+// 默认图生图模型：支持参考图 + prompt_strength，身份保持与夸张表现力均衡
+const DEFAULT_REPLICATE_MODEL = 'black-forest-labs/flux-1.1-pro'
 
 /**
  * 统一入口：由环境变量决定图片生成实现。

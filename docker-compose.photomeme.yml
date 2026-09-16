@@ -1,19 +1,22 @@
-# app-photomeme 独立编排（最轻量部署：Redis + app-photomeme）。
-# 首次上线只跑这个：
+# MeMeGo 独立编排（最轻量部署：Redis + memego）。
+# 首次上线：
 #   docker network create imagine-net 2>/dev/null; \
 #   docker compose --env-file .env.photomeme -f docker-compose.photomeme.yml up -d --build
 #
-# 后续加 app-web 时，直接 docker compose -f docker-compose.web.yml up -d 即可，
-# 两者通过 imagine-net 网络互通、各自独立 Redis 互不干扰。
+# 存储：生产推荐在 .env.photomeme 配置 R2_*（免挂载卷、免出口流量）；
+#       使用本地存储时设 LOCAL_STORAGE_DIR=/data/storage，下方卷已挂载好。
+#
+# 分享图片 7 天清理（每天 04:30，宿主机 crontab）：
+#   30 4 * * * docker exec memego pnpm cleanup:shares >> /var/log/memego-cleanup.log 2>&1
 
 services:
   redis:
     image: redis:7-alpine
-    container_name: photomeme-redis
+    container_name: memego-redis
     restart: unless-stopped
     command: redis-server --requirepass ${REDIS_PASSWORD} --appendonly yes
     volumes:
-      - photomeme-redis-data:/data
+      - memego-redis-data:/data
     networks:
       - imagine-net
     healthcheck:
@@ -22,14 +25,16 @@ services:
       timeout: 5s
       retries: 10
 
-  app-photomeme:
+  memego:
     build:
       context: .
       dockerfile: apps/app-photomeme/Dockerfile
-    image: photomeme:local
-    container_name: photomeme
+    image: memego:local
+    container_name: memego
     env_file:
       - .env.photomeme
+    volumes:
+      - memego-storage-data:/data/storage
     restart: unless-stopped
     networks:
       - imagine-net
@@ -49,4 +54,5 @@ networks:
     external: true
 
 volumes:
-  photomeme-redis-data:
+  memego-redis-data:
+  memego-storage-data:

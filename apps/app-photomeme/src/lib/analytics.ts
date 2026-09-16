@@ -1,0 +1,55 @@
+'use client'
+
+/**
+ * 轻量埋点：sendBeacon 优先（页面卸载也能发出），fetch keepalive 兜底。
+ * 服务端 /api/collect 只做事件白名单校验 + stdout JSON 日志，无数据库。
+ */
+export type AnalyticsEvent =
+  | 'homepage_view'
+  | 'photo_selected'
+  | 'style_selected'
+  | 'showcase_style_clicked'
+  | 'idea_clicked'
+  | 'generate_started'
+  | 'generation_success'
+  | 'generation_error'
+  | 'download_clicked'
+  | 'share_link_copied'
+  | 'share_platform_clicked'
+  | 'start_over_clicked'
+  | 'share_page_view'
+  | 'checkout_clicked'
+  | 'unlock_hd_clicked'
+  | 'quota_blocked'
+  | 'credits_granted'
+
+type Props = Record<string, string | number | boolean | null | undefined>
+
+export function track(event: AnalyticsEvent, props?: Props): void {
+  if (typeof window === 'undefined') return
+  const payload = JSON.stringify({
+    event,
+    props: props ?? {},
+    path: window.location.pathname,
+    referrer: document.referrer || null,
+    ts: new Date().toISOString(),
+  })
+
+  try {
+    if (navigator.sendBeacon) {
+      const blob = new Blob([payload], { type: 'application/json' })
+      if (navigator.sendBeacon('/api/collect', blob)) return
+    }
+  } catch {
+    // fall through to fetch
+  }
+
+  void fetch('/api/collect', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: payload,
+    keepalive: true,
+  }).catch(() => {
+    // 埋点失败永远不影响用户体验
+  })
+}

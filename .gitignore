@@ -5,10 +5,13 @@ node_modules
 dist
 *.tsbuildinfo
 
-# env
+# env（真实配置含密钥，一律不入库；*.example 模板除外）
 .env
 .env.local
 .env.*.local
+.env.*
+!.env.example
+!.env.*.example
 
 # os
 .DS_Store
@@ -32,3 +35,9 @@ pnpm-debug.log*
 .trae
 .idea
 .vscode
+
+# 本地对象存储（memego 本地开发）
+apps/app-photomeme/storage-data
+
+# WorkBuddy 工作区数据（记忆、任务等，非源码）
+.workbuddy

@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 #
-# app-photomeme 独立打包（无数据库依赖，最轻量）。
-# 构建：docker build -f apps/app-photomeme/Dockerfile -t photomeme:local .
+# MeMeGo（app-photomeme）独立打包（无数据库依赖，最轻量）。
+# 构建：docker build -f apps/app-photomeme/Dockerfile -t memego:local .
 # 注意 build context 必须是 monorepo 根目录（packages/* 需在上下文中）。
 
 FROM node:22-slim AS base
