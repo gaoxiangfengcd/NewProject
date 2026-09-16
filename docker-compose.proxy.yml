@@ -33,7 +33,7 @@ services:
       retries: 3
 
 networks:
-  default:
+  imagine-net:
     name: imagine-net
     external: true
 

@@ -31,6 +31,6 @@ services:
     depends_on: []
 
 networks:
-  default:
+  imagine-net:
     name: imagine-net
     external: true
