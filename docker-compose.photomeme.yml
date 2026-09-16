@@ -15,12 +15,17 @@ services:
     container_name: memego-redis
     restart: unless-stopped
     command: redis-server --requirepass ${REDIS_PASSWORD} --appendonly yes
+    # redis-cli 读取 REDISCLI_AUTH 自动认证：既避免密码出现在 argv（ps 可见），
+    # 也避免 -a 的告警污染 healthcheck 的 stdout。缺这个变量时健康检查会拿到
+    # NOAUTH 而误判容器不健康（redis-server 其实是好的）。
+    environment:
+      REDISCLI_AUTH: ${REDIS_PASSWORD}
     volumes:
       - memego-redis-data:/data
     networks:
       - imagine-net
     healthcheck:
-      test: ["CMD-SHELL", "redis-cli -a \"$$REDIS_PASSWORD\" ping | grep -q PONG"]
+      test: ["CMD-SHELL", "redis-cli ping | grep -q PONG"]
       interval: 10s
       timeout: 5s
       retries: 10
