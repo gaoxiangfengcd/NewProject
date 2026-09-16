@@ -1,3 +1,4 @@
+import { logger } from '@repo/common'
 import { getRedis } from './redis'
 
 /**
@@ -76,8 +77,13 @@ export async function checkGenerateRateLimit(req: Request): Promise<RateLimitDec
       limit,
       resetAfterSec: windowSec - (Math.floor(Date.now() / 1000) % windowSec),
     }
-  } catch {
+  } catch (err) {
     // Redis 故障时 fail-closed：拒绝生成，避免限流失效导致 API 额度被盗刷
+    // 这里必须打日志：上层只会拿到一个笼统的 503「temporarily unavailable」，
+    // 不记录就完全看不出是 Redis 的问题（曾因此排查了很久）。
+    logger.error('generate rate limit check failed', {
+      message: err instanceof Error ? err.message : String(err),
+    })
     return {
       limited: true,
       status: 503,
