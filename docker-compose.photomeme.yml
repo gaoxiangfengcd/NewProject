@@ -3,6 +3,14 @@
 #   docker network create imagine-net 2>/dev/null; \
 #   docker compose --env-file .env.photomeme -f docker-compose.photomeme.yml up -d --build
 #
+# ⚠️ 反代方案：**用宿主机 nginx，不用 Caddy**。
+#   生产机 159.223.116.111 的 80/443 已被宿主 nginx 占用（承载 ainews /
+#   plays.jiandengcun.com / tools.jiandengcun.com 三个站点），Caddy 无法绑端口。
+#   故本编排只把 memego 发布到 127.0.0.1:3100，由 nginx 反代。
+#   配套 nginx 站点配置见 deploy/nginx/memego.jiandengcun.com.conf
+#   （docker-compose.proxy.memego.yml 与 deploy/Caddyfile.memego 为备选路径，
+#     在不与既有 nginx 冲突的环境才可用）
+#
 # 存储：生产推荐在 .env.photomeme 配置 R2_*（免挂载卷、免出口流量）；
 #       使用本地存储时设 LOCAL_STORAGE_DIR=/data/storage，下方卷已挂载好。
 #
@@ -41,6 +49,11 @@ services:
         NEXT_PUBLIC_PADDLE_PRICE_ID: ${NEXT_PUBLIC_PADDLE_PRICE_ID:-}
     image: memego:local
     container_name: memego
+    # 只发布到宿主机环回地址，由宿主机 nginx 反代。
+    # 本机 80/443 已被 nginx 占用（承载 ainews / plays / tools 等站点），
+    # 故不用 Caddy；3001 也已被 AI-News 后端占用，宿主机侧改用 3100。
+    ports:
+      - '127.0.0.1:3100:3001'
     env_file:
       - .env.photomeme
     volumes:
