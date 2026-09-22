@@ -6,7 +6,8 @@ import './globals.css'
 import { ExploreMenu } from '@/components/ExploreMenu'
 import { JsonLd } from '@/components/JsonLd'
 import { CONTACT_EMAIL, RETENTION_DAYS, SITE_DESCRIPTION, SITE_NAME, SITE_URL } from '@/lib/site'
-import { organizationJsonLd, websiteJsonLd } from '@/lib/seo/metadata'
+import { organizationJsonLd, webAppJsonLd, websiteJsonLd } from '@/lib/seo/metadata'
+import { VisitTracker } from '@/components/VisitTracker'
 import { SEO_PAGES } from '@/lib/seo/pages'
 
 const jakarta = Plus_Jakarta_Sans({ subsets: ['latin'], variable: '--font-sans' })
@@ -127,7 +128,8 @@ export default function RootLayout({
                   Refunds
                 </Link>
                 <a href={`mailto:${CONTACT_EMAIL}`} className="transition hover:text-primary">
-                  Contact
+                  Contact us{' '}
+                  <span className="font-medium text-foreground">{CONTACT_EMAIL}</span>
                 </a>
               </div>
             </div>
@@ -138,7 +140,8 @@ export default function RootLayout({
           </div>
         </footer>
 
-        <JsonLd data={[organizationJsonLd(), websiteJsonLd()]} />
+        <VisitTracker />
+        <JsonLd data={[organizationJsonLd(), websiteJsonLd(), webAppJsonLd()]} />
       </body>
     </html>
   )

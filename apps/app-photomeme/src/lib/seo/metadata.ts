@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { SITE_NAME, SITE_URL } from '@/lib/site'
+import { CONTACT_EMAIL, SITE_NAME, SITE_URL } from '@/lib/site'
 import type { SeoLandingPage } from './types'
 
 export const HOME_SEO = {
@@ -75,7 +75,14 @@ export function organizationJsonLd(): Record<string, unknown> {
     name: SITE_NAME,
     url: SITE_URL,
     logo: `${SITE_URL}/logo.webp`,
+    email: CONTACT_EMAIL,
     description: HOME_SEO.description,
+    contactPoint: {
+      '@type': 'ContactPoint',
+      email: CONTACT_EMAIL,
+      contactType: 'customer support',
+      availableLanguage: 'English',
+    },
   }
 }
 
@@ -87,6 +94,25 @@ export function websiteJsonLd(): Record<string, unknown> {
     url: SITE_URL,
     description: HOME_SEO.description,
     publisher: { '@type': 'Organization', name: SITE_NAME, url: SITE_URL },
+  }
+}
+
+export function webAppJsonLd(): Record<string, unknown> {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'WebApplication',
+    name: SITE_NAME,
+    url: SITE_URL,
+    applicationCategory: 'MultimediaApplication',
+    operatingSystem: 'Web',
+    browserRequirements: 'Requires a modern browser',
+    description: HOME_SEO.description,
+    offers: {
+      '@type': 'Offer',
+      price: '0',
+      priceCurrency: 'USD',
+      description: 'One free preview a day. Paid packs unlock full-resolution gifts.',
+    },
   }
 }
 

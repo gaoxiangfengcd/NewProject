@@ -41,9 +41,10 @@ export default function PrivacyPage(): React.ReactElement {
 
       <h2>Analytics</h2>
       <p>
-        We collect anonymous product events (such as “generation started” or “share clicked”) as
-        server logs to understand whether the service works well. These logs do not identify you
-        personally and are not sold.
+        We collect anonymous product events, such as which page you opened, the site that linked
+        here, and which buttons or links you clicked. Campaign tags in the address (utm_source and
+        similar) are stored the same way. These logs do not identify you personally and are not
+        sold. We do not use third-party advertising cookies.
       </p>
 
       <h2>Payments</h2>

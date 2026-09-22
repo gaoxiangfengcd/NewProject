@@ -1,10 +1,14 @@
 import { NextResponse } from 'next/server'
 import { logger } from '@repo/common'
+import { recordAnalytics } from '@/lib/analytics-store'
 
 export const runtime = 'nodejs'
 
 /** 事件白名单：未列出的事件名直接丢弃，防止日志注入刷量 */
 const ALLOWED_EVENTS = new Set([
+  'page_view',
+  'session_entry',
+  'ui_click',
   'homepage_view',
   'photo_selected',
   'style_selected',
@@ -54,8 +58,8 @@ function sanitizeProps(raw: unknown): Record<string, string | number | boolean |
 
 /**
  * POST /api/collect
- * 轻量埋点接收：只输出结构化 stdout 日志（docker logs 可查/可被采集），
- * 不写数据库、不设 cookie、不做用户画像。
+ * 轻量埋点接收：结构化 stdout 日志，并把进入来源、浏览、点击按天累加到 Redis。
+ * 不设追踪 cookie、不做用户画像。汇总见 GET /api/insights。
  */
 export async function POST(req: Request): Promise<NextResponse> {
   let body: unknown
@@ -77,12 +81,19 @@ export async function POST(req: Request): Promise<NextResponse> {
       referrer?: unknown
       ts?: unknown
     }
+    const props = sanitizeProps(record.props)
+    const path = typeof record.path === 'string' ? record.path.slice(0, 200) : null
     logger.info('analytics_event', {
       event,
-      props: sanitizeProps(record.props),
-      path: typeof record.path === 'string' ? record.path.slice(0, 200) : null,
+      props,
+      path,
       referrer: typeof record.referrer === 'string' ? record.referrer.slice(0, 200) : null,
       ts: typeof record.ts === 'string' ? record.ts : new Date().toISOString(),
+    })
+    void recordAnalytics({ event, path, props }).catch((error: unknown) => {
+      logger.error('analytics aggregate failed', {
+        message: error instanceof Error ? error.message : String(error),
+      })
     })
   }
 

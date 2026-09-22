@@ -1,10 +1,15 @@
 'use client'
 
+import { referrerHost } from '@/lib/entry-source'
+
 /**
  * 轻量埋点：sendBeacon 优先（页面卸载也能发出），fetch keepalive 兜底。
- * 服务端 /api/collect 只做事件白名单校验 + stdout JSON 日志，无数据库。
+ * 服务端 /api/collect 校验白名单、写 stdout，并把进入来源、页面、点击按天累加到 Redis。
  */
 export type AnalyticsEvent =
+  | 'page_view'
+  | 'session_entry'
+  | 'ui_click'
   | 'homepage_view'
   | 'explore_opened'
   | 'photo_selected'
@@ -38,7 +43,7 @@ export function track(event: AnalyticsEvent, props?: Props): void {
     event,
     props: props ?? {},
     path: window.location.pathname,
-    referrer: document.referrer || null,
+    referrer: referrerHost(document.referrer) || null,
     ts: new Date().toISOString(),
   })
 
