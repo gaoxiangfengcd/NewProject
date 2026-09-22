@@ -1,13 +1,12 @@
 /**
- * 夸张风格预设（产品层唯一风格数据源，UI 与 API 共用）。
+ * Visual styles used by the UI and generation API.
  *
- * 字段说明：
- * - scenePrompt：主体发生了什么（动作/场景）
- * - stylePrompt：视觉画法约束（材质/光影/画风）
- * - strength：传给模型的 prompt_strength（越大越自由夸张，越小越贴近原图）
- * - ideas：可选 twist 灵感，点击后填入输入框
+ * The product's main promise is not "apply a filter". It is:
+ * photo -> AI notices the funniest visible thing -> pushes that thing
+ * into an unexpected caricature while keeping the people recognizable.
  */
 export type ExaggerationStyleId =
+  | 'gift-sketch'
   | 'funny-meme'
   | 'dramatic'
   | 'absurd'
@@ -15,8 +14,7 @@ export type ExaggerationStyleId =
   | 'anime'
   | 'cartoon-3d'
 
-/** 主路径默认风格：上传即可生成搞笑图，不必先选 vibe。 */
-export const DEFAULT_STYLE_ID: ExaggerationStyleId = 'funny-meme'
+export const DEFAULT_STYLE_ID: ExaggerationStyleId = 'gift-sketch'
 
 export interface ExaggerationStyle {
   id: ExaggerationStyleId
@@ -27,109 +25,124 @@ export interface ExaggerationStyle {
   stylePrompt: string
   strength: number
   ideas: string[]
+  houseStyle?: boolean
 }
 
 export const EXAGGERATION_STYLES: ExaggerationStyle[] = [
   {
-    id: 'funny-meme',
-    emoji: '😂',
-    name: 'Funny Meme',
-    tagline: 'Goofy faces, big-head energy',
+    id: 'gift-sketch',
+    emoji: '✏️',
+    name: 'Funny Caricature',
+    tagline: 'Push their funniest feature way too far',
     scenePrompt:
-      'turned into a hilarious viral internet meme, oversized head, exaggerated goofy facial expression, ridiculous body proportions',
+      'turn the uploaded photo into an unexpected hand-drawn caricature built around the single funniest visible feature, keeping the original scene as the stage for the joke',
     stylePrompt:
-      'bold saturated colors, modern internet meme aesthetic, highly detailed digital art',
-    strength: 0.75,
-    ideas: [
-      'riding a giant rubber duck',
-      'as a medieval knight who forgot their pants',
-      'sneezing a cloud of confetti',
-      'covered in pizza',
-    ],
+      'black-and-white hand-drawn pencil and ink caricature, expressive graphite and pen lines, dense cross-hatching, visible sketch texture, slightly rough handmade contours, editorial cartoon drawing, strong wide-angle and fisheye perspective, exaggerated head and facial proportions where useful, playful visual distortion, high detail, funny rather than cruel, the kind of drawing that makes the viewer laugh before they understand why',
+    // Strong enough to allow actual redraw/caricature instead of a light filter.
+    strength: 0.88,
+    houseStyle: true,
+    ideas: [],
   },
   {
     id: 'dramatic',
     emoji: '🎬',
     name: 'Dramatic',
-    tagline: 'Star of your own blockbuster',
+    tagline: 'Turn the joke into a movie moment',
     scenePrompt:
-      'reimagined as the hero of an epic blockbuster movie scene, intense dramatic moment, powerful action pose',
+      'reimagine the original scene as an absurdly dramatic cinematic moment built around the selected visual feature',
     stylePrompt:
-      'cinematic film still, dramatic rim lighting, lens flare, shallow depth of field, blockbuster color grade, photorealistic',
-    strength: 0.62,
+      'cinematic film still, dramatic rim lighting, lens flare, shallow depth of field, blockbuster color grade, expressive perspective',
+    strength: 0.78,
     ideas: [
-      'walking away from a giant explosion',
-      'on top of a mountain in a thunderstorm',
-      'as a secret agent in a neon city',
-      'giving a presidential speech',
-    ],
-  },
-  {
-    id: 'absurd',
-    emoji: '🌀',
-    name: 'Absurd',
-    tagline: 'Weird. Surreal. Hilarious.',
-    scenePrompt:
-      'thrown into a bizarre surreal dream world, impossible and absurd situation, weirdly funny',
-    stylePrompt:
-      'surrealist art style, dreamlike atmosphere, Salvador Dali inspired, vivid colors, intricate detail',
-    strength: 0.82,
-    ideas: [
-      'head replaced by a giant strawberry',
-      'melting into a sofa made of clouds',
-      'surrounded by floating goldfish',
-      'as a centaur, but the horse is a wiener dog',
+      'as the star of an absurd movie poster',
+      'with an outrageously dramatic camera angle',
+      'as if this tiny moment were the climax of an action movie',
+      'with an over-the-top cinematic close-up',
     ],
   },
   {
     id: 'pop-poster',
     emoji: '🎨',
     name: 'Pop Poster',
-    tagline: 'Bold comic-book poster art',
+    tagline: 'A bold comic-book version of the joke',
     scenePrompt:
-      'reimagined as a bold comic book pop-art poster hero, dynamic poster pose with dramatic foreshortening',
+      'reimagine the original photo as a bold comic-book caricature with the selected feature pushed into an unmistakable visual joke',
     stylePrompt:
-      'pop art style, thick black ink outlines, halftone dots, vibrant primary colors, vintage screen-printed poster',
-    strength: 0.75,
+      'thick black ink outlines, halftone texture, bold poster composition, vibrant print colors, dramatic foreshortening, expressive caricature',
+    strength: 0.84,
     ideas: [
-      'saving the city from a giant rubber chicken',
-      'as a retro space ranger',
-      'smashing through a brick wall',
-      'on a vintage propaganda poster',
-    ],
-  },
-  {
-    id: 'anime',
-    emoji: '🌸',
-    name: 'Anime',
-    tagline: 'Main character energy',
-    scenePrompt:
-      'reimagined as the main character of an anime series, expressive sparkling eyes, dynamic anime action pose',
-    stylePrompt:
-      'anime key visual, cel shading, clean lineart, vibrant colors, studio-quality anime illustration',
-    strength: 0.7,
-    ideas: [
-      'powering up with a glowing aura',
-      'as a student late for the first day of school',
-      'holding a legendary glowing sword',
-      'under cherry blossoms with wind in their hair',
+      'as the hero of a ridiculous comic-book cover',
+      'with an extreme close-up perspective',
+      'as a retro screen-printed poster',
+      'with an absurdly dramatic action pose',
     ],
   },
   {
     id: 'cartoon-3d',
     emoji: '🧸',
     name: '3D Cartoon',
-    tagline: 'Glossy animated-movie look',
+    tagline: 'A wildly exaggerated animated version',
     scenePrompt:
-      'reimagined as a glossy 3D animated movie character, oversized head, cute exaggerated features, playful expression',
+      'reimagine the people as expressive 3D animated caricatures while keeping the original scene and the selected visual joke recognizable',
     stylePrompt:
-      '3D Pixar-style render, soft studio lighting, smooth subsurface skin shading, rounded toy-like shapes, high-quality animated film',
-    strength: 0.7,
+      'high-quality 3D animated film render, oversized head, expressive facial exaggeration, rounded shapes, playful perspective, polished materials',
+    strength: 0.82,
     ideas: [
-      'as a grumpy tiny sidekick',
-      'wearing a tiny golden crown',
-      'as an action figure in a toy box',
-      'holding a giant lollipop',
+      'as a ridiculously oversized-headed animated character',
+      'with an extreme wide-angle camera',
+      'as a character in a comedy movie',
+      'with exaggerated toy-like proportions',
+    ],
+  },
+  {
+    id: 'anime',
+    emoji: '🌸',
+    name: 'Anime',
+    tagline: 'Push the photo into an expressive anime scene',
+    scenePrompt:
+      'reimagine the original photo as an expressive anime caricature while preserving the people, scene, and selected visual joke',
+    stylePrompt:
+      'anime key visual, clean lineart, expressive facial exaggeration, dramatic perspective, energetic composition, polished cel shading',
+    strength: 0.82,
+    ideas: [
+      'with an absurdly dramatic anime close-up',
+      'as the hero of a comedy anime',
+      'with exaggerated perspective and speed lines',
+      'in an over-the-top reaction shot',
+    ],
+  },
+  {
+    id: 'funny-meme',
+    emoji: '😂',
+    name: 'Funny Meme',
+    tagline: 'Maximum visual surprise',
+    scenePrompt:
+      'turn the original photo into a highly exaggerated visual meme while keeping the selected feature and people recognizable',
+    stylePrompt:
+      'bold digital illustration, extreme caricature, oversized head, dramatic fisheye perspective, expressive facial distortion, crisp humorous detail',
+    strength: 0.86,
+    ideas: [
+      'with the biggest possible version of the selected feature',
+      'as an absurd reaction meme',
+      'with extreme fisheye perspective',
+      'as if the camera were inches from the face',
+    ],
+  },
+  {
+    id: 'absurd',
+    emoji: '🌀',
+    name: 'Absurd',
+    tagline: 'Take the visual joke into surreal territory',
+    scenePrompt:
+      'push the selected visual feature into a surreal but still recognizable extension of the original scene',
+    stylePrompt:
+      'surreal editorial illustration, caricature, dramatic perspective, visual paradox, intricate detail, playful absurdity',
+    strength: 0.9,
+    ideas: [
+      'with the selected feature becoming absurdly enormous',
+      'with impossible but visually coherent perspective',
+      'where the original environment becomes part of the joke',
+      'with a surreal visual punchline',
     ],
   },
 ]

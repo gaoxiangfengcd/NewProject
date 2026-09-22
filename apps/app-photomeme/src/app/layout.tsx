@@ -1,50 +1,52 @@
 import type { Metadata } from 'next'
-import { Inter, Space_Grotesk } from 'next/font/google'
+import { Fraunces, Plus_Jakarta_Sans } from 'next/font/google'
+import Image from 'next/image'
 import Link from 'next/link'
 import './globals.css'
-import { CONTACT_EMAIL, SITE_DESCRIPTION, SITE_NAME, SITE_URL } from '@/lib/site'
+import { ExploreMenu } from '@/components/ExploreMenu'
+import { JsonLd } from '@/components/JsonLd'
+import { CONTACT_EMAIL, RETENTION_DAYS, SITE_DESCRIPTION, SITE_NAME, SITE_URL } from '@/lib/site'
+import { organizationJsonLd, websiteJsonLd } from '@/lib/seo/metadata'
+import { SEO_PAGES } from '@/lib/seo/pages'
 
-const inter = Inter({ subsets: ['latin'], variable: '--font-sans' })
-const spaceGrotesk = Space_Grotesk({
+const jakarta = Plus_Jakarta_Sans({ subsets: ['latin'], variable: '--font-sans' })
+const fraunces = Fraunces({
   subsets: ['latin'],
-  weight: ['500', '700'],
   variable: '--font-display',
+  axes: ['SOFT', 'WONK'],
 })
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: `${SITE_NAME} — Turn Any Photo Into an Exaggerated Meme`,
+    default: `Funny Personalized Digital Gifts From Photos | ${SITE_NAME}`,
     template: `%s | ${SITE_NAME}`,
   },
   description: SITE_DESCRIPTION,
   applicationName: SITE_NAME,
-  alternates: { canonical: '/' },
   openGraph: {
     type: 'website',
     siteName: SITE_NAME,
-    title: `${SITE_NAME} — Turn Any Photo Into an Exaggerated Meme`,
+    title: `Funny Personalized Digital Gifts From Photos | ${SITE_NAME}`,
     description: SITE_DESCRIPTION,
     url: SITE_URL,
     locale: 'en_US',
+    images: [
+      {
+        url: '/examples/after.webp',
+        width: 960,
+        height: 720,
+        alt: 'Funny personalized digital gift created from a photo',
+      },
+    ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: `${SITE_NAME} — Turn Any Photo Into an Exaggerated Meme`,
+    title: `Funny Personalized Digital Gifts From Photos | ${SITE_NAME}`,
     description: SITE_DESCRIPTION,
+    images: ['/examples/after.webp'],
   },
   robots: { index: true, follow: true },
-}
-
-const jsonLd = {
-  '@context': 'https://schema.org',
-  '@type': 'WebApplication',
-  name: SITE_NAME,
-  url: SITE_URL,
-  description: SITE_DESCRIPTION,
-  applicationCategory: 'MultimediaApplication',
-  operatingSystem: 'Any',
-  offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
 }
 
 export default function RootLayout({
@@ -53,60 +55,90 @@ export default function RootLayout({
   children: React.ReactNode
 }): React.ReactElement {
   return (
-    <html lang="en" className={`${inter.variable} ${spaceGrotesk.variable}`}>
+    <html lang="en" className={`${jakarta.variable} ${fraunces.variable}`}>
       <body className="font-sans antialiased">
-        {/* 背景装饰：顶部品红光晕 */}
-        <div className="pointer-events-none fixed inset-0 -z-10">
-          <div className="absolute left-1/2 top-0 h-[420px] w-[640px] -translate-x-1/2 rounded-full bg-accent/8 blur-[100px]" />
-          <div className="absolute bottom-0 left-0 h-[320px] w-[480px] rounded-full bg-primary/5 blur-[90px]" />
+        <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
+          <div className="absolute left-1/2 top-[-120px] h-[420px] w-[720px] -translate-x-1/2 rounded-full bg-blush/50 blur-[110px]" />
+          <div className="absolute right-[-80px] top-[220px] h-[320px] w-[380px] rounded-full bg-accent/12 blur-[100px]" />
+          <div className="absolute bottom-[-100px] left-[-60px] h-[340px] w-[420px] rounded-full bg-primary/8 blur-[110px]" />
         </div>
 
-        <header className="sticky top-0 z-50 w-full border-b border-border/60 bg-background/85 backdrop-blur-lg">
-          <div className="mx-auto flex h-16 max-w-4xl items-center justify-between px-4 sm:px-6">
-            <Link href="/" className="flex items-center gap-2.5">
-              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-base font-black text-primary-foreground shadow-[0_0_16px_-2px_hsl(var(--primary)/0.6)]">
-                M
-              </span>
-              <span className="font-display text-xl font-bold tracking-tight">
-                {SITE_NAME}
-              </span>
+        <header className="sticky top-0 z-50 w-full border-b border-border/70 bg-background/80 backdrop-blur-lg">
+          <div className="mx-auto flex h-[4.5rem] max-w-4xl items-center justify-between px-4 sm:h-20 sm:px-6">
+            <Link href="/" className="flex items-center" aria-label={`${SITE_NAME} home`}>
+              <Image
+                src="/logo.webp"
+                alt={`${SITE_NAME} — funny personalized digital gifts from photos`}
+                width={720}
+                height={730}
+                priority
+                className="h-14 w-auto sm:h-16"
+              />
             </Link>
-            <nav className="flex items-center gap-1">
-              <a href="#generator" className="btn-secondary text-sm">
-                Try it free
-              </a>
-            </nav>
+            <div className="flex items-center gap-3">
+              <span className="hidden text-xs text-muted-foreground sm:block">
+                1 free preview a day
+              </span>
+              <ExploreMenu />
+            </div>
           </div>
         </header>
 
         <main className="min-h-[calc(100vh-4rem)]">{children}</main>
 
-        <footer className="border-t border-border/60">
-          <div className="mx-auto flex max-w-4xl flex-col items-center justify-between gap-3 px-4 py-8 text-sm text-muted-foreground sm:flex-row sm:px-6">
-            <p>
-              © {new Date().getFullYear()} {SITE_NAME}. Photos auto-deleted in 7 days.
-            </p>
-            <div className="flex items-center gap-4">
-              <Link href="/privacy" className="transition hover:text-primary">
-                Privacy
-              </Link>
-              <Link href="/terms" className="transition hover:text-primary">
-                Terms
-              </Link>
-              <Link href="/refund" className="transition hover:text-primary">
-                Refunds
-              </Link>
-              <a href={`mailto:${CONTACT_EMAIL}`} className="transition hover:text-primary">
-                Contact
-              </a>
+        <footer className="border-t border-border/70 bg-paper/50">
+          <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6">
+            <nav aria-label="Gift ideas" className="mb-8">
+              <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
+                Gift ideas
+              </p>
+              <ul className="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-sm">
+                {SEO_PAGES.map((page) => (
+                  <li key={page.slug}>
+                    <Link href={`/${page.slug}`} className="text-muted-foreground transition hover:text-primary">
+                      {page.eyebrow}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </nav>
+            <div className="flex flex-col items-center justify-between gap-4 text-sm text-muted-foreground sm:flex-row">
+              <p className="flex flex-col items-center gap-2 text-center sm:flex-row sm:text-left">
+                <Image
+                  src="/logo.webp"
+                  alt=""
+                  width={560}
+                  height={568}
+                  className="h-10 w-auto"
+                />
+                <span>
+                  © {new Date().getFullYear()} {SITE_NAME}. Funny personalized digital gifts from
+                  photos.
+                </span>
+              </p>
+              <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
+                <Link href="/privacy" className="transition hover:text-primary">
+                  Privacy
+                </Link>
+                <Link href="/terms" className="transition hover:text-primary">
+                  Terms
+                </Link>
+                <Link href="/refund" className="transition hover:text-primary">
+                  Refunds
+                </Link>
+                <a href={`mailto:${CONTACT_EMAIL}`} className="transition hover:text-primary">
+                  Contact
+                </a>
+              </div>
             </div>
+            <p className="mt-4 text-center text-xs text-muted-foreground sm:text-left">
+              Your photos stay private and are automatically deleted after {RETENTION_DAYS} days.
+              Generated images are not a public, search-indexed gallery.
+            </p>
           </div>
         </footer>
 
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-        />
+        <JsonLd data={[organizationJsonLd(), websiteJsonLd()]} />
       </body>
     </html>
   )

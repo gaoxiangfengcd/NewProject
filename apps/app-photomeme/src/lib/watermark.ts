@@ -17,10 +17,18 @@ const WATERMARK_CANDIDATES = [
   path.join(process.cwd(), 'apps/app-photomeme/assets/watermark.png'),
 ]
 
-/** 免费预览最长边，截图也不够当成品发 */
-const FREE_MAX_EDGE = 512
-const FREE_TILE_RATIO = 0.4
-const FREE_TILE_OPACITY = 0.42
+/**
+ * 免费预览参数。
+ *
+ * 预览是「满意才付」模式的命门：用户必须能看清细节，才能判断这张够不够好、
+ * 值不值得送人。所以分辨率给到 1024（足以判断质量，但打印会糊），
+ * 水印只在右下角放一枚 —— 满屏平铺的水印会让用户无法评估成品，直接掐死转化。
+ */
+const FREE_MAX_EDGE = 1024
+const FREE_JPEG_QUALITY = 82
+const FREE_MARK_RATIO = 0.3
+const FREE_MARK_OPACITY = 0.72
+const FREE_MARK_MARGIN = 0.035
 
 let cached: Buffer | null = null
 
@@ -40,8 +48,17 @@ async function loadWatermark(): Promise<Buffer> {
   throw new Error(`watermark asset missing (${errors.join('; ')})`)
 }
 
-async function fadedTile(mark: Buffer, targetWidth: number): Promise<{ tile: Buffer; width: number; height: number }> {
-  const resized = await sharp(mark)
+async function fadedMark(mark: Buffer, targetWidth: number): Promise<Buffer> {
+  // watermark.png 是一张大画布、logo 只占一角。不先裁掉空白直接按宽度缩放，
+  // logo 会被压成几十像素的噪点。trim 后才是 logo 的真实尺寸。
+  let source = mark
+  try {
+    source = await sharp(mark).trim({ threshold: 12 }).toBuffer()
+  } catch {
+    // 没有可裁的边就按原图用，别让水印整个挂掉
+  }
+
+  const resized = await sharp(source)
     .resize({ width: targetWidth, fit: 'inside', withoutEnlargement: false })
     .ensureAlpha()
     .png()
@@ -51,23 +68,23 @@ async function fadedTile(mark: Buffer, targetWidth: number): Promise<{ tile: Buf
   const width = meta.width ?? targetWidth
   const height = meta.height ?? targetWidth
 
-  const tile = await sharp(resized)
+  return sharp(resized)
     .composite([
       {
         input: Buffer.from(
-          `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}"><rect width="100%" height="100%" fill="white" fill-opacity="${FREE_TILE_OPACITY}"/></svg>`,
+          `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}"><rect width="100%" height="100%" fill="white" fill-opacity="${FREE_MARK_OPACITY}"/></svg>`,
         ),
         blend: 'dest-in',
       },
     ])
     .png()
     .toBuffer()
-
-  return { tile, width, height }
 }
 
 /**
- * 免费档：降分辨率 + 铺满半透明水印。失败时仍返回降清晰度图，绝不回传高清原图。
+ * 免费档：可用分辨率 + 右下角单枚水印。
+ * 目的是让用户能判断成品质量并愿意付费解锁，同时不能白拿。
+ * 失败时仍返回降清晰度图，绝不回传高清原图。
  */
 export async function prepareFreePreview(png: Buffer): Promise<Buffer> {
   const preview = await sharp(png)
@@ -78,37 +95,36 @@ export async function prepareFreePreview(png: Buffer): Promise<Buffer> {
       fit: 'inside',
       withoutEnlargement: true,
     })
-    .jpeg({ quality: 58, mozjpeg: true })
+    .jpeg({ quality: FREE_JPEG_QUALITY, mozjpeg: true })
     .toBuffer()
 
   try {
     const { width, height } = await sharp(preview).metadata()
     if (!width || !height) return preview
 
-    const targetWidth = Math.max(72, Math.round(width * FREE_TILE_RATIO))
-    const { tile, width: tw, height: th } = await fadedTile(await loadWatermark(), targetWidth)
-    const stepX = Math.max(1, Math.round(tw * 0.78))
-    const stepY = Math.max(1, Math.round(th * 0.78))
+    const mark = await fadedMark(
+      await loadWatermark(),
+      Math.max(64, Math.round(width * FREE_MARK_RATIO)),
+    )
+    const markMeta = await sharp(mark).metadata()
+    const mw = markMeta.width ?? 0
+    const mh = markMeta.height ?? 0
+    if (mw < 8 || mh < 8) return preview
 
-    const overlays: sharp.OverlayOptions[] = []
-    for (let y = 0; y < height; y += stepY) {
-      for (let x = 0; x < width; x += stepX) {
-        const cropW = Math.min(tw, width - x)
-        const cropH = Math.min(th, height - y)
-        if (cropW < 8 || cropH < 8) continue
-        const input =
-          cropW === tw && cropH === th
-            ? tile
-            : await sharp(tile).extract({ left: 0, top: 0, width: cropW, height: cropH }).png().toBuffer()
-        overlays.push({ input, left: x, top: y })
-      }
-    }
+    const margin = Math.round(Math.min(width, height) * FREE_MARK_MARGIN)
 
-    if (overlays.length === 0) return preview
-
-    return await sharp(preview).composite(overlays).jpeg({ quality: 58, mozjpeg: true }).toBuffer()
+    return await sharp(preview)
+      .composite([
+        {
+          input: mark,
+          left: Math.max(0, width - mw - margin),
+          top: Math.max(0, height - mh - margin),
+        },
+      ])
+      .jpeg({ quality: FREE_JPEG_QUALITY, mozjpeg: true })
+      .toBuffer()
   } catch (e) {
-    logger.error('tiled watermark failed, using downscaled preview', {
+    logger.error('preview watermark failed, using plain preview', {
       message: e instanceof Error ? e.message : String(e),
     })
     return preview

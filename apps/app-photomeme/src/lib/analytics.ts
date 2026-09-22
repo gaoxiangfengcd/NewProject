@@ -6,6 +6,7 @@
  */
 export type AnalyticsEvent =
   | 'homepage_view'
+  | 'explore_opened'
   | 'photo_selected'
   | 'style_selected'
   | 'showcase_style_clicked'
@@ -22,6 +23,12 @@ export type AnalyticsEvent =
   | 'unlock_hd_clicked'
   | 'quota_blocked'
   | 'credits_granted'
+  | 'twist_hint_shown'
+  | 'twist_hint_skipped'
+  | 'twist_hint_muted'
+  | 'photo_analyzed'
+  | 'make_crazier'
+  | 'try_another_idea'
 
 type Props = Record<string, string | number | boolean | null | undefined>
 

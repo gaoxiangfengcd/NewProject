@@ -1,90 +1,77 @@
+import type { Metadata } from 'next'
 import { Generator } from '@/components/Generator'
+import { ExampleBeforeAfter } from '@/components/ExampleBeforeAfter'
 import { Faq } from '@/components/Faq'
-import { HowItWorks } from '@/components/HowItWorks'
-import { StyleShowcase } from '@/components/StyleShowcase'
-import { RETENTION_DAYS } from '@/lib/site'
+import { GiftSeoNav } from '@/components/GiftSeoNav'
+import { SITE_NAME } from '@/lib/site'
+import { homeMetadata, HOME_SEO } from '@/lib/seo/metadata'
+import Image from 'next/image'
 
-const STATS = [
-  { value: '~20s', label: 'From upload to meme', tone: 'text-primary' },
-  { value: '1 free', label: 'Watermarked preview each day', tone: 'text-accent' },
-  { value: 'HD', label: 'Pay to unlock the clean image', tone: 'text-primary' },
+export const metadata: Metadata = homeMetadata()
+
+const HOME_FAQS = [
+  {
+    q: 'What is a digital gift?',
+    a: `${SITE_NAME} makes a personalized illustrated image from a photo. You download it and send it — no shipping and no physical product from us.`,
+  },
+  {
+    q: 'Can I send a digital gift instantly?',
+    a: 'Yes. Create, download, and share. We do not offer physical same-day delivery.',
+  },
+  {
+    q: 'Do I need to install an app?',
+    a: 'No. It runs in the browser.',
+  },
+  {
+    q: 'Is the generated image printable?',
+    a: 'Unlocked HD gifts are full resolution with no watermark, so you can print them if you want. Free previews are lighter and watermarked.',
+  },
 ]
 
-const TRUST_POINTS = ['1 free preview / day', 'HD unlock, no watermark', `Auto-deleted in ${RETENTION_DAYS} days`]
-
+/**
+ * 首页：礼物搜索意图优先，不是通用 AI 作图工具。
+ */
 export default function HomePage(): React.ReactElement {
   return (
     <div>
-      {/* Hero */}
-      <section className="mx-auto max-w-3xl px-4 pb-6 pt-14 text-center sm:px-6 sm:pt-20">
-        <span className="eyebrow">AI photo exaggerator</span>
-        <h1 className="mt-3 font-display text-5xl font-bold leading-[1.05] tracking-tight sm:text-7xl">
-          Turn any photo into a{' '}
-          <span className="text-gradient">ridiculous meme</span>
+      <section className="mx-auto max-w-3xl px-4 pb-6 pt-8 text-center sm:px-6 sm:pb-8 sm:pt-10">
+        <Image
+          src="/logo.webp"
+          alt={`${SITE_NAME} — funny personalized digital gifts from photos`}
+          width={720}
+          height={730}
+          priority
+          className="mx-auto h-auto w-[min(100%,22rem)] sm:w-[26rem]"
+        />
+        <h1 className="mt-6 font-display text-[2.1rem] font-bold leading-[1.15] tracking-tight sm:mt-8 sm:text-[2.75rem]">
+          {HOME_SEO.h1}
         </h1>
-        <p className="mx-auto mt-5 max-w-lg text-base text-muted-foreground sm:text-lg">
-          Upload a selfie for one free watermarked preview. Unlock HD when you want the clean image.
+        <p className="mx-auto mt-4 max-w-md text-sm leading-relaxed text-muted-foreground sm:text-base">
+          {HOME_SEO.support}
         </p>
-
-        <div className="mt-8 flex flex-col items-center gap-4">
-          <a href="#generator" className="btn-primary animate-glow px-10 text-lg">
-            Make my meme
+        <div className="mt-6 flex flex-col items-center justify-center gap-2.5 sm:flex-row">
+          <a href="#generator" className="btn-primary">
+            Make a Gift
           </a>
-          <div className="flex flex-wrap items-center justify-center gap-2">
-            {TRUST_POINTS.map((point) => (
-              <span key={point} className="trust-pill">
-                <svg
-                  className="h-3.5 w-3.5 text-primary"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                  aria-hidden="true"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M16.704 5.29a1 1 0 010 1.42l-7.5 7.5a1 1 0 01-1.42 0l-3.5-3.5a1 1 0 011.42-1.42l2.79 2.79 6.79-6.79a1 1 0 011.42 0z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-                {point}
-              </span>
-            ))}
-          </div>
+          <a href="#examples" className="btn-secondary">
+            Explore Examples
+          </a>
         </div>
       </section>
 
-      {/* Generator */}
-      <section id="generator" className="mx-auto max-w-4xl scroll-mt-20 px-4 pb-8 sm:px-6">
+      <section id="examples" className="mx-auto max-w-4xl scroll-mt-20 px-4 pb-8 sm:px-6">
+        <ExampleBeforeAfter />
+      </section>
+
+      <section id="generator" className="mx-auto max-w-4xl scroll-mt-20 px-4 pb-10 sm:px-6">
         <Generator />
       </section>
 
-      {/* Feature strip */}
-      <section className="mx-auto max-w-3xl px-4 py-6 sm:px-6">
-        <div className="grid gap-px overflow-hidden rounded-3xl border border-border bg-border sm:grid-cols-3">
-          {STATS.map((stat) => (
-            <div key={stat.label} className="bg-secondary p-6">
-              <p className={`font-display text-3xl font-bold ${stat.tone}`}>{stat.value}</p>
-              <p className="mt-1 text-sm text-muted-foreground">{stat.label}</p>
-            </div>
-          ))}
-        </div>
+      <section className="mx-auto max-w-3xl px-4 pb-6 sm:px-6">
+        <GiftSeoNav heading="Gift ideas people actually search for" />
       </section>
 
-      <HowItWorks />
-
-      <StyleShowcase />
-
-      <Faq />
-
-      {/* Bottom CTA */}
-      <section className="mx-auto max-w-3xl px-4 py-16 text-center sm:px-6">
-        <h2 className="font-display text-3xl font-bold tracking-tight sm:text-4xl">
-          Someone in your camera roll{' '}
-          <span className="text-accent-highlight">deserves this</span>.
-        </h2>
-        <a href="#generator" className="btn-primary mt-6 px-10 text-lg">
-          Start exaggerating
-        </a>
-      </section>
+      <Faq extras={HOME_FAQS} />
     </div>
   )
 }

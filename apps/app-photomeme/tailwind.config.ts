@@ -31,6 +31,14 @@ const config: Config = {
           DEFAULT: 'hsl(var(--muted))',
           foreground: 'hsl(var(--muted-foreground))',
         },
+        /* 相框/卡片的纸白色，比 background 更亮一点，用于从奶油底上"浮"起来 */
+        paper: 'hsl(var(--paper))',
+        /* 装饰色：腮红粉，仅用于背景光晕 */
+        blush: 'hsl(var(--blush))',
+      },
+      boxShadow: {
+        soft: 'var(--shadow-soft)',
+        lift: 'var(--shadow-lift)',
       },
       borderRadius: {
         lg: 'var(--radius)',
@@ -59,9 +67,14 @@ const config: Config = {
           '0%': { backgroundPosition: '-200% 0' },
           '100%': { backgroundPosition: '200% 0' },
         },
+        /* 暖色呼吸：柔和阴影明暗起伏，不是霓虹辉光 */
         'glow-pulse': {
-          '0%, 100%': { boxShadow: '0 0 24px -4px hsl(var(--primary)/0.5)' },
-          '50%': { boxShadow: '0 0 36px 0px hsl(var(--primary)/0.7)' },
+          '0%, 100%': {
+            boxShadow: '0 2px 4px -2px hsl(12 62% 30% / 0.24), 0 10px 22px -10px hsl(12 62% 30% / 0.42)',
+          },
+          '50%': {
+            boxShadow: '0 3px 6px -2px hsl(12 62% 30% / 0.28), 0 16px 30px -12px hsl(12 62% 30% / 0.5)',
+          },
         },
       },
       animation: {

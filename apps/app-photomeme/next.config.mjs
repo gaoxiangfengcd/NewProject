@@ -8,6 +8,15 @@ const nextConfig = {
   experimental: {
     trustHostHeader: true,
   },
+  webpack: (config, { dev }) => {
+    if (dev) {
+      config.watchOptions = {
+        ...config.watchOptions,
+        ignored: ['**/node_modules/**', '**/.git/**', '**/storage-data/**', '**/.next/**'],
+      }
+    }
+    return config
+  },
   eslint: {
     dirs: ['src/app', 'src/components', 'src/lib'],
   },

@@ -1,13 +1,13 @@
 import { NextResponse } from 'next/server'
-import { getProvider as getImageProvider } from '@repo/image-gen'
 import { getProvider as getStorageProvider } from '@repo/storage'
 import { logger } from '@repo/common'
 import { checkGenerateRateLimit } from '@/lib/rate-limit'
-import { buildExaggerationPrompt, sanitizeTwist } from '@/lib/prompt'
+import { buildExaggerationPrompt, parseUserCreativeRules } from '@/lib/prompt'
 import { getStyleOrDefault } from '@/lib/styles'
 import { validateImage } from '@/lib/validation'
 import { prepareGeneratedImage } from '@/lib/watermark'
 import { modelForTier, type GenerationTier } from '@/lib/billing'
+import { executeT2I } from '@/lib/execute-generation'
 import {
   consumePaidCredit,
   getQuotaSnapshot,
@@ -26,7 +26,7 @@ import {
 } from '@/lib/share'
 
 export const runtime = 'nodejs'
-export const maxDuration = 60
+export const maxDuration = 90
 
 function jsonError(
   status: number,
@@ -47,16 +47,6 @@ function attachSession(
   return res
 }
 
-async function fetchAsBuffer(url: string): Promise<Buffer> {
-  if (url.startsWith('data:')) {
-    const base64 = url.slice(url.indexOf(',') + 1)
-    return Buffer.from(base64, 'base64')
-  }
-  const res = await fetch(url, { signal: AbortSignal.timeout(30_000) })
-  if (!res.ok) throw new Error(`RESULT_FETCH_FAILED:${res.status}`)
-  return Buffer.from(await res.arrayBuffer())
-}
-
 function quotaUnavailable(error: 'redis_required' | 'redis_unavailable'): NextResponse {
   return jsonError(
     503,
@@ -66,15 +56,37 @@ function quotaUnavailable(error: 'redis_required' | 'redis_unavailable'): NextRe
   )
 }
 
+function parseDirectionField(raw: unknown): { scene: string } | null {
+  if (typeof raw !== 'string' || !raw.trim()) return null
+  try {
+    const parsed = JSON.parse(raw) as Record<string, unknown>
+    const title = typeof parsed.title === 'string' ? parsed.title.replace(/\s+/g, ' ').trim() : ''
+    const description =
+      typeof parsed.description === 'string' ? parsed.description.replace(/\s+/g, ' ').trim() : ''
+    const english =
+      typeof parsed.english_prompt === 'string' ? parsed.english_prompt.replace(/\s+/g, ' ').trim() : ''
+    const scene = /[\u4e00-\u9fff]/.test(description)
+      ? description
+      : [title, description].filter(Boolean).join('. ') || english
+    if (!scene) return null
+    return { scene: scene.slice(0, 700) }
+  } catch {
+    return null
+  }
+}
+
 /**
  * POST /api/generate  (multipart/form-data)
- * fields: file · style? · twist? · tier=free|paid
+ * fields: file · style? · twist? · tier=free|paid · analysis? JSON creative brief
  *
- * free：每 IP 每天 1 次，便宜模型 + 低清满幅水印
- * paid：扣 1 次付费额度，好模型 + 高清无水印
+ * free：每 IP 每天 1 次，便宜模型 + 低清水印 + 更轻的夸张
+ * paid：扣 1 次付费额度（记在 Redis 钱包，剩余次数永不过期），更好模型 + 高清无水印 + 更搞笑
  * Generate again / 换 vibe 都是一次新的生成，按当时剩余额度计。
  */
 export async function POST(req: Request): Promise<NextResponse> {
+  const provider = 'seedream'
+  console.log('[generate] using provider:', provider)
+  console.log('[generate] provider:', provider)
   const wallet = ensureWalletId(req)
 
   const rateLimit = await checkGenerateRateLimit(req)
@@ -106,12 +118,52 @@ export async function POST(req: Request): Promise<NextResponse> {
   }
 
   const style = getStyleOrDefault(String(form.get('style') ?? ''))
-  const twist = sanitizeTwist(form.get('twist'))
-  if (twist === null) {
-    return attachSession(jsonError(400, 'INVALID_TWIST', 'Your twist is too long.'), wallet)
+  const twistParsed = parseUserCreativeRules(form.get('twist'))
+  if (!twistParsed.ok) {
+    return attachSession(jsonError(400, twistParsed.code, twistParsed.message), wallet)
+  }
+  let twist = twistParsed.value
+  const direction = parseDirectionField(form.get('direction'))
+  if (direction) {
+    const scene = twist ? `${direction.scene}。用户要求：${twist}` : direction.scene
+    const directed = parseUserCreativeRules(`DIRECTION:${scene}`)
+    if (!directed.ok) {
+      return attachSession(jsonError(400, directed.code, directed.message), wallet)
+    }
+    twist = directed.value
   }
 
   const requestedTier: GenerationTier = String(form.get('tier') ?? 'free') === 'paid' ? 'paid' : 'free'
+  console.log(
+    '[route] request:',
+    JSON.stringify({
+      hasPhoto: Boolean(file),
+      style: style?.name,
+      tier: requestedTier,
+      twist: twist?.slice(0, 50),
+    }),
+  )
+  console.log('[route] ---- analyze done ----')
+
+  if (process.env.DEBUG_STOP_AFTER_REASONING === '1') {
+    console.log('[route] ---- debug stop after reasoning (generation skipped) ----')
+    return attachSession(
+      NextResponse.json({
+        ok: true,
+        data: {
+          shareId: '',
+          inputUrl: '',
+          outputUrl: '',
+          style: style.id,
+          twist: twist || '',
+          tier: requestedTier,
+          primaryFeature: '',
+          debugStop: 'reasoning',
+        },
+      }),
+      wallet,
+    )
+  }
 
   const validation = validateImage({ type: file.type, size: file.size })
   if (!validation.ok) {
@@ -199,20 +251,16 @@ export async function POST(req: Request): Promise<NextResponse> {
   }
 
   try {
-    const dataUri = `data:${validation.mime};base64,${inputBuffer.toString('base64')}`
-    const provider = getImageProvider()
-    const prompt = buildExaggerationPrompt(style, twist || undefined)
+    console.log('[route] ---- reasoning done ----')
+    const prompt = buildExaggerationPrompt(style, twist || undefined, tier, null)
     const model = modelForTier(tier)
+    console.log('[generate] using provider:', provider)
+    console.log('[generate] provider:', provider)
+    console.log('[generate] model:', model)
 
-    const result = await provider.generate({
-      prompt,
-      inputImage: dataUri,
-      promptStrength: style.strength,
-      size: '1:1',
-      model,
-    })
-
-    if (!result.ok) {
+    const failGeneration = async (result: {
+      error: { code: string; details?: unknown }
+    }): Promise<NextResponse> => {
       if (reservedFree) await refundFreeSlot(req)
       if (consumedPaid) cookieCredits = await refundPaidCredit(wallet.id, cookieCredits)
       logger.error('image generation failed', {
@@ -220,35 +268,89 @@ export async function POST(req: Request): Promise<NextResponse> {
         provider: result.error.code,
         details: result.error.details,
       })
+      const providerMessage = String(
+        (result.error.details as { message?: unknown } | undefined)?.message ?? '',
+      )
+      const blocked = /flagged as sensitive|E005|nsfw|safety/i.test(providerMessage)
+      const noCredit = /insufficient credit|402/i.test(providerMessage)
+      const timedOut = /timed out/i.test(providerMessage)
       return attachSession(
         jsonError(
-          502,
-          'GENERATION_FAILED',
-          'Our artist had a brain freeze. Please try again in a moment.',
+          blocked ? 422 : noCredit ? 402 : timedOut ? 504 : 502,
+          blocked ? 'CONTENT_BLOCKED' : noCredit ? 'PROVIDER_CREDIT' : 'GENERATION_FAILED',
+          blocked
+            ? 'The image model blocked this photo. Photos of young children are often rejected by the safety filter — try a photo of an adult, or a different picture.'
+            : noCredit
+              ? 'The drawing service is out of credit. Check 火山引擎 Seedream billing and try again.'
+              : timedOut
+                ? 'Seedream took too long (over 60s). Please try once more in a minute.'
+                : providerMessage
+                  ? providerMessage
+                  : 'Seedream failed to draw this image. Please try again in a moment.',
         ),
         wallet,
         cookieCredits,
       )
     }
 
-    let outputBuffer: Buffer
+    const generated = await executeT2I({
+      prompt,
+      model,
+      inputImage: `data:${validation.mime};base64,${inputBuffer.toString('base64')}`,
+    })
+    if (!generated.ok) {
+      if (generated.error.code === 'SEEDREAM_CONFIG' || generated.error.code === 'SEEDREAM_FAILED') {
+        if (reservedFree) await refundFreeSlot(req)
+        if (consumedPaid) cookieCredits = await refundPaidCredit(wallet.id, cookieCredits)
+        const message = String(
+          (generated.error.details as { message?: unknown } | undefined)?.message ??
+            'Seedream is not configured or the request failed.',
+        )
+        return attachSession(
+          jsonError(
+            generated.error.code === 'SEEDREAM_CONFIG' ? 503 : 502,
+            generated.error.code,
+            message,
+          ),
+          wallet,
+          cookieCredits,
+        )
+      }
+      if (generated.error.code === 'RESULT_FETCH_FAILED') {
+        if (reservedFree) await refundFreeSlot(req)
+        if (consumedPaid) cookieCredits = await refundPaidCredit(wallet.id, cookieCredits)
+        return attachSession(
+          jsonError(502, 'RESULT_FETCH_FAILED', 'Could not download the generated image.'),
+          wallet,
+          cookieCredits,
+        )
+      }
+      return await failGeneration(generated)
+    }
+
+    const outputBuffer = generated.buffer
+    const usedProvider = generated.provider
+    const usedModel = generated.model
+    const usedPrompt = generated.prompt
+
+    let prepared: Awaited<ReturnType<typeof prepareGeneratedImage>>
     try {
-      outputBuffer = await fetchAsBuffer(result.value.url)
+      prepared = await prepareGeneratedImage(outputBuffer, tier)
     } catch (e) {
-      if (reservedFree) await refundFreeSlot(req)
-      if (consumedPaid) cookieCredits = await refundPaidCredit(wallet.id, cookieCredits)
-      logger.error('result fetch failed', {
+      logger.error('prepare generated image failed', {
         id,
         message: e instanceof Error ? e.message : String(e),
       })
       return attachSession(
-        jsonError(502, 'RESULT_FETCH_FAILED', 'Could not download the generated image.'),
+        jsonError(
+          502,
+          'GENERATION_FAILED',
+          'Seedream returned an image we could not process. Please try again.',
+        ),
         wallet,
         cookieCredits,
       )
     }
-
-    const prepared = await prepareGeneratedImage(outputBuffer, tier)
     const outputKey = shareOutputKey(id, prepared.ext)
 
     const outputUpload = await storage.upload(outputKey, prepared.buffer, {
@@ -285,8 +387,8 @@ export async function POST(req: Request): Promise<NextResponse> {
       id,
       style: style.id,
       tier,
-      provider: result.value.provider,
-      model: result.value.model,
+      provider: usedProvider,
+      model: usedModel,
       bytes: prepared.buffer.length,
     })
 
@@ -301,6 +403,8 @@ export async function POST(req: Request): Promise<NextResponse> {
           twist: twist || '',
           tier,
           quota,
+          prompt: usedPrompt,
+          imageUrl: meta.outputUrl,
         },
       }),
       wallet,
@@ -309,9 +413,14 @@ export async function POST(req: Request): Promise<NextResponse> {
   } catch (e) {
     if (reservedFree) await refundFreeSlot(req)
     if (consumedPaid) cookieCredits = await refundPaidCredit(wallet.id, cookieCredits)
-    logger.error('generate route error', { id, message: e instanceof Error ? e.message : String(e) })
+    const message = e instanceof Error ? e.message : String(e)
+    logger.error('generate route error', { id, message })
     return attachSession(
-      jsonError(500, 'GENERATION_ERROR', 'Something went wrong. Please try again.'),
+      jsonError(
+        500,
+        'GENERATION_ERROR',
+        message ? `Generation failed: ${message}` : 'Something went wrong. Please try again.',
+      ),
       wallet,
       cookieCredits,
     )

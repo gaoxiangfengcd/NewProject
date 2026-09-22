@@ -1,14 +1,29 @@
 import type { Metadata } from 'next'
 import { CONTACT_EMAIL, RETENTION_DAYS, SITE_NAME } from '@/lib/site'
-import { CREDITS_PER_PURCHASE, paidPriceLabel } from '@/lib/billing'
+import { CREDIT_TTL_DAYS, creditPacks } from '@/lib/billing'
 
 export const metadata: Metadata = {
   title: 'Refund Policy',
-  description: `How refunds work for ${SITE_NAME} HD credits, processed by Paddle.`,
+  description: `How refunds work for ${SITE_NAME} gifts, processed by Paddle.`,
   alternates: { canonical: '/refund' },
 }
 
+function ttlLabel(days: number): string {
+  if (days <= 0) return ''
+  if (days >= 365) {
+    const years = Math.round(days / 365)
+    return `${years} year${years > 1 ? 's' : ''}`
+  }
+  return `${days} days`
+}
+
 export default function RefundPage(): React.ReactElement {
+  const packs = creditPacks()
+  const ttl = ttlLabel(CREDIT_TTL_DAYS)
+  const packList = packs
+    .map((p) => `${p.credits} generations for ${p.priceLabel}`)
+    .join(', ')
+
   return (
     <article className="prose-app mx-auto max-w-2xl px-4 py-12 sm:px-6">
       <h1 className="font-display text-3xl font-bold tracking-tight">Refund Policy</h1>
@@ -16,22 +31,26 @@ export default function RefundPage(): React.ReactElement {
 
       <h2>The short version</h2>
       <p>
-        Every HD purchase is {CREDITS_PER_PURCHASE === 1 ? 'one' : CREDITS_PER_PURCHASE} HD
-        {CREDITS_PER_PURCHASE === 1 ? ' generation' : ' generations'} at {paidPriceLabel()}. If you
-        paid and did not get what you expected, email us within <strong>14 days</strong> and we will
-        make it right. Unused credits are always refundable.
+        A gift is a set number of generations{packList ? ` (${packList})` : ''}. Every generation you
+        spend produces a finished piece at full resolution with no watermark, using the stronger HD
+        model, and you keep all of them. The free preview uses a lighter model so you can check the
+        idea before you spend anything
+        {ttl
+          ? `. Unused generations stay valid for ${ttl} from the date of purchase`
+          : '. Unused generations never expire'}
+        . Unused generations are always refundable — email us within <strong>14 days</strong>.
       </p>
 
       <h2>What you can get refunded</h2>
       <ul>
         <li>
-          <strong>Unused HD credits</strong> — full refund, no questions asked, within 14 days of
+          <strong>Unused generations</strong> — full refund, no questions asked, within 14 days of
           purchase.
         </li>
         <li>
-          <strong>Failed generations</strong> — if a paid generation errored out, timed out or
-          produced nothing, the credit is automatically returned to your balance, or refunded if you
-          prefer.
+          <strong>Delivered files</strong> — if an unlock errored out, timed out or gave you a
+          broken or wrong-resolution file, the gift is automatically returned to your balance, or
+          refunded if you prefer.
         </li>
         <li>
           <strong>Wrong or duplicate charges</strong> — full refund, including accidental double
@@ -41,15 +60,29 @@ export default function RefundPage(): React.ReactElement {
 
       <h2>When a refund is not available</h2>
       <p>
-        Once an HD credit is spent, the image has already been generated and the compute cost has
-        been paid to our AI provider. We cannot refund a credit you already used just because you
-        did not like the result.
+        Once a generation has been spent, the image has been made and the compute cost has been paid
+        to our AI provider. We cannot refund generations you already used just because you did not
+        like the result — that is exactly what the free preview is for, so you know what you are
+        getting.
+      </p>
+      <p>
+        But if something is genuinely broken — a garbled face, a corrupted file, a result that does
+        not look like the person at all — that is on us. Email us and we will top you up with extra
+        generations, or refund you if you would rather stop there.
       </p>
       <p>
         {SITE_NAME} generates exaggerated, quirky versions of your photo — results vary run to run
-        and that is part of the joke. Try another vibe or another photo before deciding it did not
-        work.
+        and that is part of the charm. Pick the photo and style you like most before you spend a
+        generation, because each one counts.
       </p>
+
+      {CREDIT_TTL_DAYS > 0 && (
+        <p>
+          Generations that have already expired cannot be refunded. If you do not plan to use a pack
+          right away, ask for a refund inside the 14-day window rather than waiting for them to
+          lapse.
+        </p>
+      )}
 
       <h2>How to request a refund</h2>
       <p>

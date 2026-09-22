@@ -1,8 +1,12 @@
+import type { Redis } from 'ioredis'
 import { getClientIp } from './rate-limit'
 import { getRedis } from './redis'
 import {
   CREDITS_PER_PURCHASE,
+  CREDIT_TTL_DAYS,
+  CREDIT_TTL_MS,
   FREE_PER_DAY,
+  creditPacks,
   isCheckoutEnabled,
   isDevCreditGrantEnabled,
   isLiveImageGen,
@@ -36,8 +40,84 @@ function freeKey(ip: string): string {
   return `quota:free:ip:${ip}:${utcDateKey()}`
 }
 
-function creditsKey(walletId: string): string {
-  return `wallet:${walletId}:credits`
+/**
+ * 点数按「批次」存：一笔购买 = 一个批次，field = 到期时间戳(ms)，value = 剩余点数。
+ * CREDIT_TTL_DAYS=0 时到期时间为极大值，剩余次数永久有效。
+ * 购买流水另记在 wallet:{id}:ledger（Redis 即本站额度账本）。
+ *
+ * 为什么不是单个计数器：若配置了有效期，单一数字表达不了「先到期的先扣」。
+ * 用 hash 后每次 HINCRBY 仍是原子操作，扣减时按到期时间升序取最早的批次。
+ * 另起一个 key（不复用 wallet:{id}:credits）是为了避开旧数据的 WRONGTYPE。
+ */
+function batchesKey(walletId: string): string {
+  return `wallet:${walletId}:credit_batches`
+}
+
+interface CreditBatch {
+  exp: number
+  n: number
+}
+
+function expiryFrom(now: number): number {
+  return CREDIT_TTL_MS > 0 ? now + CREDIT_TTL_MS : Number.MAX_SAFE_INTEGER
+}
+
+/** 读出未过期批次（按到期时间升序），顺手清掉已过期/非法的 field。 */
+async function readBatches(redis: Redis, walletId: string): Promise<CreditBatch[]> {
+  const key = batchesKey(walletId)
+  const raw = await redis.hgetall(key)
+  const now = Date.now()
+  const batches: CreditBatch[] = []
+  const stale: string[] = []
+  for (const [field, value] of Object.entries(raw ?? {})) {
+    const exp = Number(field)
+    const n = Number(value)
+    if (!Number.isFinite(exp) || !Number.isFinite(n) || n <= 0 || exp <= now) {
+      stale.push(field)
+      continue
+    }
+    batches.push({ exp, n })
+  }
+  if (stale.length > 0) await redis.hdel(key, ...stale).catch(() => undefined)
+  return batches.sort((a, b) => a.exp - b.exp)
+}
+
+/**
+ * 发放点数。inheritExpiry=true 用于「生成失败退还」——退回原批次的有效期，
+ * 而不是白送新的一年。
+ */
+async function grantCredits(
+  redis: Redis,
+  walletId: string,
+  amount: number,
+  inheritExpiry = false,
+): Promise<void> {
+  const n = Math.max(0, Math.floor(amount))
+  if (n === 0) return
+
+  const key = batchesKey(walletId)
+  let exp = expiryFrom(Date.now())
+  if (inheritExpiry) {
+    const batches = await readBatches(redis, walletId)
+    for (const batch of batches) {
+      if (batch.exp > exp) exp = batch.exp
+    }
+  }
+
+  await redis.hincrby(key, String(exp), n)
+  if (CREDIT_TTL_MS > 0) {
+    await redis.pexpire(key, CREDIT_TTL_MS + 86_400_000).catch(() => undefined)
+  } else {
+    await redis.persist(key).catch(() => undefined)
+  }
+  const ledger = `wallet:${walletId}:ledger`
+  await redis
+    .lpush(
+      ledger,
+      JSON.stringify({ at: new Date().toISOString(), credits: n, forever: CREDIT_TTL_MS <= 0 }),
+    )
+    .catch(() => undefined)
+  await redis.ltrim(ledger, 0, 199).catch(() => undefined)
 }
 
 export function identityKey(req: Request): string {
@@ -53,18 +133,20 @@ export async function getQuotaSnapshot(req: Request, walletId: string): Promise<
 
   if (redis) {
     try {
-      const [usedRaw, creditsRaw] = await Promise.all([
+      const [usedRaw, batches] = await Promise.all([
         redis.get(freeKey(identityKey(req))),
-        redis.get(creditsKey(walletId)),
+        readBatches(redis, walletId),
       ])
       freeUsed = Math.max(0, Number(usedRaw ?? 0) || 0)
-      paidCredits = Math.max(0, Number(creditsRaw ?? 0) || 0)
+      paidCredits = batches.reduce((sum, b) => sum + b.n, 0)
     } catch {
       // 读失败时按 0 展示，真正生成仍会 fail-closed
     }
   } else {
     paidCredits = readDevCreditsCookie(req)
   }
+
+  const packs = creditPacks()
 
   return {
     freeRemaining: Math.max(0, freeLimit - freeUsed),
@@ -73,7 +155,9 @@ export async function getQuotaSnapshot(req: Request, walletId: string): Promise<
     checkoutEnabled: isCheckoutEnabled(),
     devGrantEnabled: isDevCreditGrantEnabled(),
     priceLabel: paidPriceLabel(),
-    creditsPerPurchase: CREDITS_PER_PURCHASE,
+    creditsPerPurchase: packs[0]?.credits ?? CREDITS_PER_PURCHASE,
+    packs,
+    creditTtlDays: CREDIT_TTL_DAYS,
   }
 }
 
@@ -122,13 +206,19 @@ export async function consumePaidCredit(
   const redis = getRedis()
   if (redis) {
     try {
-      const key = creditsKey(walletId)
-      const next = await redis.decr(key)
-      if (next < 0) {
-        await redis.incr(key)
-        return { ok: false, error: 'no_credits' }
+      const key = batchesKey(walletId)
+      const batches = await readBatches(redis, walletId)
+      // 先扣最早到期的批次；并发下可能扣到 -1，回滚后继续试下一个批次
+      for (const batch of batches) {
+        const field = String(batch.exp)
+        const next = await redis.hincrby(key, field, -1)
+        if (next >= 0) {
+          if (next === 0) await redis.hdel(key, field).catch(() => undefined)
+          return { ok: true }
+        }
+        await redis.hincrby(key, field, 1).catch(() => undefined)
       }
-      return { ok: true }
+      return { ok: false, error: 'no_credits' }
     } catch {
       return { ok: false, error: 'redis_unavailable' }
     }
@@ -145,7 +235,7 @@ export async function refundPaidCredit(walletId: string, cookieCredits?: number)
   const redis = getRedis()
   if (redis) {
     try {
-      await redis.incr(creditsKey(walletId))
+      await grantCredits(redis, walletId, 1, true)
     } catch {
       // ignore
     }
@@ -166,7 +256,7 @@ export async function addPaidCredits(
   const redis = getRedis()
   if (redis) {
     try {
-      await redis.incrby(creditsKey(walletId), n)
+      await grantCredits(redis, walletId, n)
       return { ok: true }
     } catch {
       return { ok: false, error: 'redis_unavailable' }
@@ -208,7 +298,7 @@ export async function addPaidCreditsToWallet(
   const redis = getRedis()
   if (!redis) return { ok: false, error: mustEnforceQuota() ? 'redis_required' : 'redis_unavailable' }
   try {
-    await redis.incrby(creditsKey(walletId), n)
+    await grantCredits(redis, walletId, n)
     return { ok: true }
   } catch {
     return { ok: false, error: 'redis_unavailable' }

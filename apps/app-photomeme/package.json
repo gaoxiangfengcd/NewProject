@@ -8,6 +8,7 @@
     "start": "next start -p 3001",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
+    "test:flow": "tsx scripts/e2e-flow.ts",
     "cleanup:shares": "tsx scripts/cleanup-shares.ts"
   },
   "dependencies": {

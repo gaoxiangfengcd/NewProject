@@ -6,7 +6,9 @@ export const SITE_URL = (
 ).replace(/\/+$/, '')
 
 export const SITE_DESCRIPTION =
-  'Turn any photo into a funny meme. One free watermarked preview per day. Unlock HD for the full-quality image with no watermark.'
+  'Turn a photo of a friend, partner, or family member into a funny personalized digital gift. MeMeGo finds what makes them unique and exaggerates it into something unforgettable.'
+
+export const SITE_TAGLINE = 'Funny personalized digital gifts from photos'
 
 export const CONTACT_EMAIL = 'gaoxiangfengcd@gmail.com'
 

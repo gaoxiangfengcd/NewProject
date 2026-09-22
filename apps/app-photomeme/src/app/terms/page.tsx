@@ -15,15 +15,18 @@ export default function TermsPage(): React.ReactElement {
 
       <h2>The service</h2>
       <p>
-        {SITE_NAME} lets you turn a photo into an exaggerated, stylized meme using AI. You get a
-        limited free watermarked preview. Full-quality (HD) generations are paid.
+        {SITE_NAME} lets you turn a photo into an exaggerated, stylized meme using AI. You get
+        one free watermarked preview per day on a lighter, milder model. Paid unlocks use a
+        stronger, funnier HD model. Unused paid generations are stored on your wallet and do not
+        expire.
       </p>
 
       <h2>Paid unlocks</h2>
       <p>
         HD purchases are processed by Paddle.com, who is the Merchant of Record. We never see your
-        full card number. Unused HD credits may be refunded by emailing us with your Paddle
-        transaction ID.
+        full card number. Each pack adds a set number of HD generations to your wallet (stored in
+        our credits ledger). Remaining generations never expire. Unused HD credits may be refunded
+        by emailing us with your Paddle transaction ID.
       </p>
 
       <h2>Your content</h2>

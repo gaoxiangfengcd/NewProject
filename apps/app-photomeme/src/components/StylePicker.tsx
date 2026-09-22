@@ -8,13 +8,15 @@ interface StyleColor {
   text: string
 }
 
+/* 浅色底上用 600 级色，400 级会淡到看不清 */
 const STYLE_COLORS: Record<ExaggerationStyleId, StyleColor> = {
+  'gift-sketch': { border: 'hover:border-orange-700', text: 'text-orange-700' },
   'funny-meme': { border: 'hover:border-primary', text: 'text-primary' },
-  dramatic: { border: 'hover:border-amber-500', text: 'text-amber-400' },
+  dramatic: { border: 'hover:border-amber-600', text: 'text-amber-600' },
   absurd: { border: 'hover:border-accent', text: 'text-accent' },
-  'pop-poster': { border: 'hover:border-cyan-500', text: 'text-cyan-400' },
-  anime: { border: 'hover:border-rose-500', text: 'text-rose-400' },
-  'cartoon-3d': { border: 'hover:border-violet-500', text: 'text-violet-400' },
+  'pop-poster': { border: 'hover:border-teal-600', text: 'text-teal-600' },
+  anime: { border: 'hover:border-rose-400', text: 'text-rose-400' },
+  'cartoon-3d': { border: 'hover:border-violet-400', text: 'text-violet-400' },
 }
 
 interface StylePickerProps {
@@ -38,8 +40,8 @@ export function StylePicker({ value, onChange }: StylePickerProps): React.ReactE
             }}
             className={
               active
-                ? 'animate-pop-in flex flex-col items-start gap-1.5 rounded-2xl border border-primary bg-primary/15 p-4 text-left shadow-[0_0_20px_-4px_hsl(var(--primary)/0.4)] transition active:scale-[0.97]'
-                : `flex flex-col items-start gap-1.5 rounded-2xl border border-border bg-secondary p-4 text-left transition active:scale-[0.97] ${color.border} hover:bg-muted`
+                ? 'animate-pop-in flex flex-col items-start gap-1.5 rounded-2xl border border-primary bg-primary/12 p-4 text-left shadow-[0_10px_24px_-14px_hsl(12_62%_46%/0.55)] transition active:scale-[0.97]'
+                : `flex flex-col items-start gap-1.5 rounded-2xl border border-border bg-paper p-4 text-left transition active:scale-[0.97] ${color.border} hover:bg-muted`
             }
           >
             <span className={active ? 'text-2xl leading-none' : `text-2xl leading-none ${color.text}`}>

@@ -1,13 +1,33 @@
+import { FREE_PER_DAY } from '@/lib/billing'
 import { RETENTION_DAYS, SITE_NAME } from '@/lib/site'
+import type { SeoFaq } from '@/lib/seo/types'
+import { JsonLd } from '@/components/JsonLd'
+import { faqJsonLd } from '@/lib/seo/metadata'
 
 const FAQS = [
   {
-    q: `Is ${SITE_NAME} free?`,
-    a: `You get 1 free preview per day — low-res, with a ${SITE_NAME} watermark across the image. Generate again or try another vibe counts as a new run. Unlock HD (paid via Paddle) to get the full-quality image with no watermark.`,
+    q: `How much does ${SITE_NAME} cost?`,
+    a: `You get ${FREE_PER_DAY} free preview${FREE_PER_DAY === 1 ? '' : 's'} a day on a lighter model — lower resolution, a small ${SITE_NAME} mark, and a milder look — so you can see the idea before spending anything. Unlocking a gift runs a stronger, funnier HD model at full resolution with no watermark. Unused generations never expire.`,
+  },
+  {
+    q: 'What is the difference between free and HD?',
+    a: 'We look for one distinctive, non-sensitive visual feature — hair, glasses, pose, a hat — then imagine an absurd consequence in the original place. That becomes the gift. The free preview uses a lighter model; HD commits harder to the same joke, sharper and without a watermark.',
+  },
+  {
+    q: 'Why is the number of generations limited?',
+    a: 'Every generation runs a real AI model, so each one costs compute — that is the honest reason. It also helps you finish: with a set number of tries you pick a photo and a style you actually like, instead of tweaking forever and never sending anything.',
+  },
+  {
+    q: 'Do unused generations expire?',
+    a: 'No. When you buy a pack, leftover HD generations stay in your wallet until you use them. They do not expire after a year.',
+  },
+  {
+    q: 'Can I give it as a gift?',
+    a: 'That is what it is built for. Upload a photo of a partner, a parent, or a friend, try a few styles, then give the one that made you laugh. Every generation you unlock is full resolution and print-ready, so you can frame it or send it on the day.',
   },
   {
     q: 'Do I need an account?',
-    a: 'Nope. No sign-up, no password, no email. Upload a photo and get your meme in seconds.',
+    a: 'Nope. No sign-up, no password, no email. Upload a photo and see your preview in seconds.',
   },
   {
     q: 'What happens to my photos?',
@@ -19,24 +39,17 @@ const FAQS = [
   },
   {
     q: 'How long does it take?',
-    a: 'Most memes are ready in 10–20 seconds. If the generator is busy it can take a bit longer, and the countdown on screen shows how long yours has been running.',
+    a: 'Most gifts are ready in 10–20 seconds. If the generator is busy it can take a bit longer, and the countdown on screen shows how long yours has been running.',
   },
   {
-    q: 'Can I write my own prompt?',
-    a: 'Yes. Tap a suggested twist or type anything you like into the "Add a twist" box — the wilder the better. After your first meme you can also try another vibe.',
+    q: 'Why does the result depend on what I write?',
+    a: 'This is a meme, so the picture follows the scene you describe. A specific line — the hat, the side-eye, the Hello Kitty shirt — is what gets exaggerated. A vague line comes back as a plain pencil portrait. We suggest one from the photo; edit it until the joke is obvious.',
   },
 ]
 
-export function Faq(): React.ReactElement {
-  const jsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'FAQPage',
-    mainEntity: FAQS.map((item) => ({
-      '@type': 'Question',
-      name: item.q,
-      acceptedAnswer: { '@type': 'Answer', text: item.a },
-    })),
-  }
+export function Faq({ extras = [] }: { extras?: SeoFaq[] } = {}): React.ReactElement {
+  const items = [...extras, ...FAQS]
+  const jsonLd = faqJsonLd(items)
 
   return (
     <section className="mx-auto max-w-2xl px-4 py-14 sm:px-6">
@@ -45,7 +58,7 @@ export function Faq(): React.ReactElement {
       </h2>
 
       <div className="mt-7 flex flex-col gap-2.5">
-        {FAQS.map((item) => (
+        {items.map((item) => (
           <details
             key={item.q}
             className="group card overflow-hidden px-5 py-4 [&_summary::-webkit-details-marker]:hidden"
@@ -61,10 +74,7 @@ export function Faq(): React.ReactElement {
         ))}
       </div>
 
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
+      <JsonLd data={jsonLd} />
     </section>
   )
 }

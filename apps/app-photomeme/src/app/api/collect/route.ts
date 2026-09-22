@@ -22,6 +22,13 @@ const ALLOWED_EVENTS = new Set([
   'unlock_hd_clicked',
   'quota_blocked',
   'credits_granted',
+  'explore_opened',
+  'twist_hint_shown',
+  'twist_hint_skipped',
+  'twist_hint_muted',
+  'photo_analyzed',
+  'make_crazier',
+  'try_another_idea',
 ])
 
 const MAX_PROPS = 20

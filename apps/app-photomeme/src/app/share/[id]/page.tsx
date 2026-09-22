@@ -7,6 +7,7 @@ import { readShareMeta, type ShareMeta } from '@/lib/share'
 import { getStyle } from '@/lib/styles'
 import { ShareButtons } from '@/components/ShareButtons'
 import { SharePageTracker } from '@/components/SharePageTracker'
+import { GuardedImage } from '@/components/GuardedImage'
 import { SITE_NAME, SITE_URL } from '@/lib/site'
 
 export const runtime = 'nodejs'
@@ -25,18 +26,19 @@ interface PageProps {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const meta = await loadMeta(params.id)
-  if (!meta) return { title: 'Meme not found' }
+  if (!meta) return { title: 'Gift not found', robots: { index: false, follow: false } }
 
   const style = getStyle(meta.style)
   const title = `Look what ${SITE_NAME} made${style ? ` — ${style.name} vibe` : ''}`
   const description = meta.twist
-    ? `"${meta.twist}" — I turned my photo into an exaggerated meme with ${SITE_NAME}. Try yours:`
-    : `I turned my photo into an exaggerated meme with ${SITE_NAME}. Try yours:`
+    ? `"${meta.twist}" — I turned a photo into a funny personalized digital gift with ${SITE_NAME}. Try yours:`
+    : `I turned a photo into a funny personalized digital gift with ${SITE_NAME}. Try yours:`
   const images = [`${SITE_URL}${meta.outputUrl}`]
 
   return {
     title,
     description,
+    robots: { index: false, follow: false },
     alternates: { canonical: `/share/${meta.id}` },
     openGraph: {
       type: 'website',
@@ -77,27 +79,46 @@ export default async function SharePage({ params }: PageProps): Promise<React.Re
 
       {/* 左右两栏 */}
       <div className="mt-6 grid gap-3 sm:grid-cols-2 sm:gap-4">
-        <div className="relative overflow-hidden rounded-2xl border border-border bg-muted">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={meta.inputUrl} alt="Original" className="aspect-square w-full object-cover" />
-          <span className="absolute bottom-2.5 left-2.5 rounded-lg bg-background/90 px-2.5 py-1 text-xs font-bold text-foreground backdrop-blur-md">
-            Original
-          </span>
+        <div className="photo-frame">
+          <div className="photo-canvas">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={meta.inputUrl}
+              alt="Original"
+              className="aspect-square w-full object-cover"
+            />
+            <span className="absolute bottom-2.5 left-2.5 rounded-lg bg-paper/90 px-2.5 py-1 text-xs font-bold text-foreground shadow-soft backdrop-blur-md">
+              Original
+            </span>
+          </div>
+          <p className="photo-caption">The photo they sent</p>
         </div>
-        <div className="relative overflow-hidden rounded-2xl border border-border bg-muted">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={meta.outputUrl} alt="Result" className="aspect-square w-full object-cover" />
-          <span className="absolute left-2.5 top-2.5 rounded-lg bg-primary px-2.5 py-1 text-xs font-bold text-primary-foreground">
-            Result
-          </span>
+        <div className="photo-frame">
+          <div className="photo-canvas">
+            <GuardedImage
+              src={meta.outputUrl}
+              alt="Result"
+              locked={meta.tier !== 'paid'}
+              className="aspect-square w-full object-cover"
+            />
+            <span className="absolute left-2.5 top-2.5 rounded-lg bg-primary px-2.5 py-1 text-xs font-bold text-primary-foreground">
+              Their gift
+            </span>
+          </div>
+          <p className="photo-caption">{style ? style.name : 'Made for them'}</p>
         </div>
       </div>
 
-      {/* 操作 */}
       <div className="mt-6 flex gap-2.5">
-        <a href={meta.outputUrl} download="memego.png" className="btn-primary flex-1">
-          Download
-        </a>
+        {meta.tier === 'paid' ? (
+          <a href={meta.outputUrl} download="memego.png" className="btn-primary flex-1">
+            Download
+          </a>
+        ) : (
+          <Link href="/#generator" className="btn-primary flex-1 text-center">
+            Unlock print-ready to download
+          </Link>
+        )}
       </div>
 
       <div className="mt-5">

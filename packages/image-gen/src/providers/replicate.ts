@@ -84,12 +84,28 @@ export class ReplicateProvider implements ImageGenProvider {
         }
       }
 
-      // 不同模型的 run 泛型签名差异较大，这里按运行时调用处理
-      const run = client.run as (
-        identifier: string,
-        options: { input: Record<string, unknown> },
-      ) => Promise<unknown>
-      const output = await run(model, { input })
+      // 必须作为方法调用，拆出 run 会丢 this，导致 predictions 为 undefined。
+      // 本地 Next 不会执行 maxDuration，不加超时会一直转圈。
+      const RUN_TIMEOUT_MS = 55_000
+      const output = await Promise.race([
+        (
+          client as {
+            run: (
+              identifier: string,
+              options: { input: Record<string, unknown> },
+            ) => Promise<unknown>
+          }
+        ).run(model, { input }),
+        new Promise<never>((_, reject) => {
+          setTimeout(() => {
+            reject(
+              new Error(
+                `Replicate timed out after ${Math.round(RUN_TIMEOUT_MS / 1000)}s (model still queued or hung)`,
+              ),
+            )
+          }, RUN_TIMEOUT_MS)
+        }),
+      ])
 
       // flux 等模型输出为 URL 数组；兼容单字符串及 { url } 形态
       const raw: unknown = Array.isArray(output) ? output[0] : output

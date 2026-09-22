@@ -1,6 +1,6 @@
 import { createHmac, timingSafeEqual } from 'node:crypto'
 import { logger } from '@repo/common'
-import { CREDITS_PER_PURCHASE } from './billing'
+import { CREDITS_PER_PURCHASE, creditPacks, type CreditPack } from './billing'
 import { SITE_URL } from './site'
 
 function apiBaseUrl(apiKey: string): string {
@@ -12,22 +12,8 @@ export function paddleApiKey(): string {
   return (process.env.PADDLE_API_KEY ?? '').trim()
 }
 
-export function paddlePriceId(): string {
-  return (
-    (process.env.PADDLE_PRICE_ID ?? '').trim() ||
-    (process.env.NEXT_PUBLIC_PADDLE_PRICE_ID ?? '').trim()
-  )
-}
-
 export function isPaddleConfigured(): boolean {
-  return Boolean(paddleApiKey() && paddlePriceId())
-}
-
-function buildCheckoutUrl(txnId: string, apiKey: string): string {
-  const host = apiKey.includes('sdbx')
-    ? 'https://sandbox-checkout.paddle.com'
-    : 'https://checkout.paddle.com'
-  return `${host}/checkout/buy?_ptxn=${encodeURIComponent(txnId)}`
+  return Boolean(paddleApiKey() && creditPacks().length > 0)
 }
 
 export interface PaddleTransaction {
@@ -39,34 +25,48 @@ export interface PaddleTransaction {
 /**
  * 创建一次性 HD 次数的 Paddle Billing transaction，返回 Hosted Checkout URL。
  */
-export async function createHdCheckout(walletId: string): Promise<
-  { ok: true; checkoutUrl: string; transactionId: string } | { ok: false; message: string }
+export async function createHdCheckout(
+  walletId: string,
+  pack: Pick<CreditPack, 'id' | 'priceId' | 'credits'>,
+): Promise<
+  { ok: true; checkoutUrl: string; transactionId: string; packId: string } | { ok: false; message: string }
 > {
   const apiKey = paddleApiKey()
-  const priceId = paddlePriceId()
-  if (!apiKey || !priceId) {
+  if (!apiKey || !pack.priceId) {
     return { ok: false, message: 'Paddle checkout is not configured yet.' }
   }
 
+  // ⚠️ 入账的 credits 一定要来自服务端配置，绝不能相信前端传来的数字。
+  const credits = Math.max(1, Math.floor(pack.credits) || CREDITS_PER_PURCHASE)
+
   const payload = {
-    items: [{ price_id: priceId, quantity: 1 }],
+    items: [{ price_id: pack.priceId, quantity: 1 }],
     custom_data: {
       walletId,
-      credits: CREDITS_PER_PURCHASE,
+      credits,
+      packId: pack.id,
     },
     checkout: {
       success_url: `${SITE_URL}/?checkout=success#generator`,
     },
   }
 
-  const res = await fetch(`${apiBaseUrl(apiKey)}/transactions`, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(payload),
-  })
+  let res: Response
+  try {
+    res = await fetch(`${apiBaseUrl(apiKey)}/transactions`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    })
+  } catch (e) {
+    logger.error('paddle create transaction network error', {
+      message: e instanceof Error ? e.message : String(e),
+    })
+    return { ok: false, message: 'Cannot reach Paddle. Check your network and try again.' }
+  }
 
   if (!res.ok) {
     const body = await res.text().catch(() => '')
@@ -74,13 +74,18 @@ export async function createHdCheckout(walletId: string): Promise<
     return { ok: false, message: 'Could not start checkout. Please try again.' }
   }
 
-  const json = (await res.json()) as { data?: { id?: string } }
+  const json = (await res.json()) as { data?: { id?: string; checkout?: { url?: string | null } } }
   const txnId = json.data?.id
   if (!txnId) {
     return { ok: false, message: 'Could not start checkout. Please try again.' }
   }
 
-  return { ok: true, checkoutUrl: buildCheckoutUrl(txnId, apiKey), transactionId: txnId }
+  return {
+    ok: true,
+    checkoutUrl: `${SITE_URL}/?_ptxn=${encodeURIComponent(txnId)}`,
+    transactionId: txnId,
+    packId: pack.id,
+  }
 }
 
 export async function getPaddleTransaction(
