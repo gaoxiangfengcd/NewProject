@@ -98,10 +98,15 @@ export async function openPaddleCheckout(opts: OpenCheckoutOpts): Promise<void> 
 
   const origin = typeof window !== 'undefined' ? window.location.origin : ''
   const txn = (opts.transactionId ?? '').trim()
-  if (origin && /^txn_[A-Za-z0-9]+$/.test(txn)) {
-    window.location.assign(`${origin}/?_ptxn=${encodeURIComponent(txn)}`)
+  const hosted = (opts.checkoutUrl ?? '').trim()
+  if (hosted.startsWith('https://') && origin && !hosted.startsWith(origin)) {
+    window.location.assign(hosted)
     return
   }
 
-  opts.onError?.('Checkout could not open — Paddle is not configured yet.')
+  opts.onError?.('Checkout could not open. Add the Paddle client token and try again.')
+  if (typeof window !== 'undefined' && window.location.search.includes('_ptxn=')) {
+    window.history.replaceState({}, '', `${window.location.pathname}#generator`)
+  }
+  void txn
 }

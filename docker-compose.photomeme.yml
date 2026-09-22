@@ -47,6 +47,7 @@ services:
       args:
         NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL}
         NEXT_PUBLIC_PADDLE_PRICE_ID: ${NEXT_PUBLIC_PADDLE_PRICE_ID:-}
+        NEXT_PUBLIC_PADDLE_CLIENT_TOKEN: ${NEXT_PUBLIC_PADDLE_CLIENT_TOKEN:-}
     image: memego:local
     container_name: memego
     # 只发布到宿主机环回地址，由宿主机 nginx 反代。

@@ -80,9 +80,10 @@ export async function createHdCheckout(
     return { ok: false, message: 'Could not start checkout. Please try again.' }
   }
 
+  const hosted = json.data?.checkout?.url?.trim()
   return {
     ok: true,
-    checkoutUrl: `${SITE_URL}/?_ptxn=${encodeURIComponent(txnId)}`,
+    checkoutUrl: hosted && hosted.startsWith('https://') ? hosted : `${SITE_URL}/?checkout=success#generator`,
     transactionId: txnId,
     packId: pack.id,
   }
