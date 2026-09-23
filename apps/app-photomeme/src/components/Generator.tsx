@@ -14,7 +14,6 @@ import {
 import { MAX_TWIST_LENGTH, SENSITIVE_TWIST_MESSAGE } from '@/lib/prompt'
 import { isSensitiveFeatureText } from '@/lib/creative-engine'
 import { track } from '@/lib/analytics'
-import { openPaddleCheckout } from '@/lib/paddle-js'
 import type { GenerationResult, QuotaSnapshot } from '@/lib/types'
 
 type DirectionChoice = {
@@ -85,9 +84,9 @@ export function Generator(): React.ReactElement {
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
-    const txnId = params.get('_ptxn') || params.get('transaction_id')
-    const paidReturn = params.get('checkout') === 'success'
-    if (!paidReturn && !txnId) return
+    const checkoutId = params.get('checkout_id')
+    const paidReturn = params.get('checkout') === 'success' || Boolean(checkoutId)
+    if (!paidReturn) return
 
     async function applyConfirm(id: string): Promise<boolean> {
       const res = await fetch('/api/credits/confirm', {
@@ -100,29 +99,15 @@ export function Generator(): React.ReactElement {
         setQuota(json.data as QuotaSnapshot)
         setPaywall(false)
         setError(null)
-        track('credits_granted', { source: 'paddle' })
+        track('credits_granted', { source: 'creem' })
         return true
       }
       return false
     }
 
     void (async () => {
-      if (txnId && !paidReturn) {
-        await openPaddleCheckout({
-          transactionId: txnId,
-          onSuccess: async () => {
-            const landed = await applyConfirm(txnId)
-            if (!landed) {
-              const qr = await fetch('/api/quota').then((r) => r.json()).catch(() => null)
-              if (qr?.ok && qr.data) setQuota(qr.data as QuotaSnapshot)
-            }
-          },
-        })
-        return
-      }
-
-      if (txnId) {
-        const landed = await applyConfirm(txnId)
+      if (checkoutId) {
+        const landed = await applyConfirm(checkoutId)
         if (!landed) {
           setError('Payment succeeded, but credits did not land. Refresh and try again.')
         }
@@ -449,29 +434,13 @@ export function Generator(): React.ReactElement {
       if (!res.ok || !json?.ok) {
         throw new Error(json?.error?.message ?? 'Checkout is not available yet.')
       }
-      const data = (json.data ?? {}) as { url?: string; transactionId?: string }
-      await openPaddleCheckout({
-        transactionId: data.transactionId,
-        checkoutUrl: data.url,
-        onSuccess: async () => {
-          // 站内浮层付款成功：先走 confirm 兜底入账，再拉最新额度（不必整页跳转回站）。
-          if (data.transactionId) {
-            await fetch('/api/credits/confirm', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ transactionId: data.transactionId }),
-            }).catch(() => undefined)
-          }
-          const qr = await fetch('/api/quota').then((r) => r.json()).catch(() => null)
-          if (qr?.ok && qr.data) {
-            setQuota(qr.data as QuotaSnapshot)
-            setPaywall(false)
-            setError(null)
-            track('credits_granted', { source: 'paddle' })
-          }
-        },
-        onError: (message) => setError(message),
-      })
+      const data = (json.data ?? {}) as { url?: string }
+      const url = (data.url ?? '').trim()
+      if (!url.startsWith('https://') || url.startsWith(window.location.origin)) {
+        throw new Error('Checkout could not open. Please try again.')
+      }
+      window.location.assign(url)
+      return
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Checkout is not available yet.')
     } finally {
@@ -665,9 +634,8 @@ export function Generator(): React.ReactElement {
                   </button>
                 )}
               </div>
-              {/* Paddle 域名审核要求：退款政策必须在结账入口处可见 */}
               <p className="text-xs text-muted-foreground">
-                Payments are handled by Paddle.com (Merchant of Record). Unused generations are
+                Payments are handled by Creem (Merchant of Record). Unused generations are
                 refundable within 14 days — see the{' '}
                 <Link href="/refund" className="font-medium text-primary underline-offset-2 hover:underline">
                   refund policy

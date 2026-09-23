@@ -12,7 +12,7 @@ export const metadata: Metadata = homeMetadata()
 const HOME_FAQS = [
   {
     q: 'What is a digital gift?',
-    a: `${SITE_NAME} makes a personalized illustrated image from a photo. You download it and send it — no shipping and no physical product from us.`,
+    a: `${SITE_NAME} draws a cartoon character from a photo. You download the cartoon and send it. It does not swap or change a real person's face, and we do not ship a physical product.`,
   },
   {
     q: 'Can I send a digital gift instantly?',

@@ -135,7 +135,8 @@ export default function RootLayout({
             </div>
             <p className="mt-4 text-center text-xs text-muted-foreground sm:text-left">
               Your photos stay private and are automatically deleted after {RETENTION_DAYS} days.
-              Generated images are not a public, search-indexed gallery.
+              {SITE_NAME} draws a cartoon character from your photo. It does not swap or change a
+              real person&apos;s face.
             </p>
           </div>
         </footer>

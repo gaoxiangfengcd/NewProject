@@ -23,7 +23,7 @@ const FAQS = [
   },
   {
     q: 'Can I give it as a gift?',
-    a: 'That is what it is built for. Upload a photo of a partner, a parent, or a friend, try a few styles, then give the one that made you laugh. Every generation you unlock is full resolution and print-ready, so you can frame it or send it on the day.',
+    a: 'That is what it is built for. Upload a photo of a partner, a parent, or a friend, and MeMeGo draws a cartoon character you can send. It does not change their real face. Every unlocked cartoon is full resolution, so you can print it or send it on the day.',
   },
   {
     q: 'Do I need an account?',
@@ -35,7 +35,7 @@ const FAQS = [
   },
   {
     q: 'What kind of photo works best?',
-    a: 'A clear, well-lit shot of one face gives the best result — front-facing selfies work great. Group photos and heavy sunglasses make it harder for the AI to know who to exaggerate.',
+    a: 'A clear, well-lit shot of one person gives the best cartoon. Group photos and heavy sunglasses make it harder to tell who the character should be.',
   },
   {
     q: 'How long does it take?',

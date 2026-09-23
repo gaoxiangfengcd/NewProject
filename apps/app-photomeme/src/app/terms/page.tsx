@@ -15,18 +15,26 @@ export default function TermsPage(): React.ReactElement {
 
       <h2>The service</h2>
       <p>
-        {SITE_NAME} lets you turn a photo into an exaggerated, stylized meme using AI. You get
-        one free watermarked preview per day on a lighter, milder model. Paid unlocks use a
-        stronger, funnier HD model. Unused paid generations are stored on your wallet and do not
-        expire.
+        {SITE_NAME} uses a photo only as a reference to draw a cartoon character. The result is an
+        illustrated cartoon you can download and send as a gift. You get one free watermarked
+        preview per day on a lighter, milder model. Paid unlocks use a stronger HD model. Unused
+        paid generations are stored on your wallet and do not expire.
+      </p>
+
+      <h2>Cartoon characters only</h2>
+      <p>
+        {SITE_NAME} does not change, swap, or replace a real person&apos;s face. It does not make
+        realistic edits of a photograph, and it is not a face-swap or deepfake tool. The picture
+        you get is a cartoon character. Do not present that cartoon as a real photo of someone, and
+        do not use it to impersonate them.
       </p>
 
       <h2>Paid unlocks</h2>
       <p>
-        HD purchases are processed by Paddle.com, who is the Merchant of Record. We never see your
-        full card number. Each pack adds a set number of HD generations to your wallet (stored in
-        our credits ledger). Remaining generations never expire. Unused HD credits may be refunded
-        by emailing us with your Paddle transaction ID.
+        HD purchases are processed by Creem, who is the Merchant of Record. We never see your full
+        card number. Each pack adds a set number of HD generations to your wallet (stored in our
+        credits ledger). Remaining generations never expire. Unused HD credits may be refunded by
+        emailing us with your Creem order ID.
       </p>
 
       <h2>Your content</h2>
@@ -34,7 +42,7 @@ export default function TermsPage(): React.ReactElement {
         <li>You may only upload photos you have the right to use.</li>
         <li>Do not upload illegal, sexual, abusive or otherwise harmful content.</li>
         <li>
-          You are responsible for the memes you create and how you share them. Don&apos;t use
+          You are responsible for the cartoons you create and how you share them. Don&apos;t use{' '}
           {SITE_NAME} to harass, defame or deceive anyone.
         </li>
         <li>Generated results may be imperfect. AI output can occasionally look wrong.</li>
@@ -43,7 +51,8 @@ export default function TermsPage(): React.ReactElement {
       <h2>Acceptable use</h2>
       <p>
         Automated abuse, attempts to overwhelm the service, or generation of content targeting
-        minors is prohibited. Rate limits are applied to keep the service free for everyone.
+        minors is prohibited. Do not use {SITE_NAME} to create nude or sexually explicit images, or
+        to change a real face. Rate limits are applied to keep the service free for everyone.
       </p>
 
       <h2>Availability</h2>

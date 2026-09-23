@@ -4,7 +4,7 @@ import { CREDIT_TTL_DAYS, creditPacks } from '@/lib/billing'
 
 export const metadata: Metadata = {
   title: 'Refund Policy',
-  description: `How refunds work for ${SITE_NAME} gifts, processed by Paddle.`,
+  description: `How refunds work for ${SITE_NAME} gifts, processed by Creem.`,
   alternates: { canonical: '/refund' },
 }
 
@@ -71,8 +71,8 @@ export default function RefundPage(): React.ReactElement {
         generations, or refund you if you would rather stop there.
       </p>
       <p>
-        {SITE_NAME} generates exaggerated, quirky versions of your photo — results vary run to run
-        and that is part of the charm. Pick the photo and style you like most before you spend a
+        {SITE_NAME} draws a cartoon character from your photo. It does not change a real face.
+        Cartoon results vary run to run. Pick the photo and joke you like most before you spend a
         generation, because each one counts.
       </p>
 
@@ -94,11 +94,11 @@ export default function RefundPage(): React.ReactElement {
       </p>
       <ul>
         <li>the email address used at checkout, and</li>
-        <li>your Paddle transaction ID (it looks like <code>txn_01h...</code> and is in your receipt).</li>
+        <li>your Creem order ID (it looks like <code>ord_...</code> and is in your receipt).</li>
       </ul>
       <p>
         We aim to reply within 2 business days. Approved refunds are processed by{' '}
-        <strong>Paddle.com</strong>, our Merchant of Record, and go back to your original payment
+        <strong>Creem</strong>, our Merchant of Record, and go back to your original payment
         method — usually within 5–10 business days, depending on your bank or card issuer.
       </p>
 

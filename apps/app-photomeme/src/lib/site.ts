@@ -6,7 +6,7 @@ export const SITE_URL = (
 ).replace(/\/+$/, '')
 
 export const SITE_DESCRIPTION =
-  'Turn a photo of a friend, partner, or family member into a funny personalized digital gift. MeMeGo finds what makes them unique and exaggerates it into something unforgettable.'
+  'Turn a photo of a friend, partner, or family member into a cartoon character you can send as a gift. MeMeGo does not swap or change a real face.'
 
 export const SITE_TAGLINE = 'Funny personalized digital gifts from photos'
 

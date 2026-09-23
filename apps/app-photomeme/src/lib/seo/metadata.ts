@@ -8,7 +8,7 @@ export const HOME_SEO = {
     'Turn a photo of a friend, partner, or family member into a funny personalized digital gift. MeMeGo finds what makes them unique and exaggerates it into something unforgettable.',
   h1: "Turn a Photo Into a Gift They'll Actually Laugh At",
   support:
-    'Upload a photo. MeMeGo finds what makes them unmistakably them — then takes it way too far.',
+    'Upload a photo. MeMeGo draws a cartoon character from it — a gift to send, not a change to their real face.',
 } as const
 
 const OG_IMAGE = {

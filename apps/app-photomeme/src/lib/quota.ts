@@ -16,8 +16,10 @@ import {
 import { readDevCreditsCookie } from './wallet'
 
 /**
- * 每日免费额度按 IP 计（设备指纹以后加在 identityKey 里，不改调用方）。
- * 付费次数记在钱包 cookie 对应的 Redis，未配 Redis 的 mock 开发可用 cookie 次数。
+ * 免费额度按「这个浏览器」计，同时再卡一道 IP。
+ * 只按 IP 时，关浏览器、换网络或 IPv4/IPv6 切换都会变成一个新人，免费次数被重置。
+ * 钱包 cookie 关浏览器还在，所以免费次数跟钱包走，从第一次使用起 24 小时。
+ * 付费次数也记在这个钱包上。未配 Redis 的 mock 开发可用 cookie 次数。
  */
 
 export type QuotaBackendError = 'redis_required' | 'redis_unavailable'
@@ -26,18 +28,31 @@ function mustEnforceQuota(): boolean {
   return isLiveImageGen() && process.env.NODE_ENV === 'production'
 }
 
-function utcDateKey(): string {
-  return new Date().toISOString().slice(0, 10)
+/** 免费窗口从第一次占用起算，不是到 UTC 零点（北京时间早上 8 点）清零。 */
+const FREE_WINDOW_SEC = 60 * 60 * 24
+
+function freeDeviceKey(walletId: string): string {
+  return `quota:free:dev:${walletId}`
 }
 
-function ttlUntilNextUtcMidnightSec(): number {
-  const now = new Date()
-  const next = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1)
-  return Math.max(60, Math.ceil((next - Date.now()) / 1000))
+function freeIpKey(ip: string): string {
+  return `quota:free:ip:${ip}`
 }
 
-function freeKey(ip: string): string {
-  return `quota:free:ip:${ip}:${utcDateKey()}`
+async function readFreeCount(redis: Redis, key: string): Promise<number> {
+  const raw = await redis.get(key)
+  return Math.max(0, Number(raw ?? 0) || 0)
+}
+
+async function takeFreeCount(redis: Redis, key: string): Promise<number> {
+  const count = await redis.incr(key)
+  if (count === 1) await redis.expire(key, FREE_WINDOW_SEC)
+  return count
+}
+
+async function giveBackFreeCount(redis: Redis, key: string): Promise<void> {
+  const next = await redis.decr(key)
+  if (next <= 0) await redis.del(key)
 }
 
 /**
@@ -133,11 +148,12 @@ export async function getQuotaSnapshot(req: Request, walletId: string): Promise<
 
   if (redis) {
     try {
-      const [usedRaw, batches] = await Promise.all([
-        redis.get(freeKey(identityKey(req))),
+      const [deviceUsed, ipUsed, batches] = await Promise.all([
+        readFreeCount(redis, freeDeviceKey(walletId)),
+        readFreeCount(redis, freeIpKey(identityKey(req))),
         readBatches(redis, walletId),
       ])
-      freeUsed = Math.max(0, Number(usedRaw ?? 0) || 0)
+      freeUsed = Math.max(deviceUsed, ipUsed)
       paidCredits = batches.reduce((sum, b) => sum + b.n, 0)
     } catch {
       // 读失败时按 0 展示，真正生成仍会 fail-closed
@@ -163,6 +179,7 @@ export async function getQuotaSnapshot(req: Request, walletId: string): Promise<
 
 export async function reserveFreeSlot(
   req: Request,
+  walletId: string,
 ): Promise<{ ok: true } | { ok: false; error: QuotaBackendError | 'quota_exceeded' }> {
   const redis = getRedis()
   if (!redis) {
@@ -170,12 +187,14 @@ export async function reserveFreeSlot(
     return { ok: true }
   }
 
-  const key = freeKey(identityKey(req))
+  const deviceKey = freeDeviceKey(walletId)
+  const ipKey = freeIpKey(identityKey(req))
   try {
-    const count = await redis.incr(key)
-    if (count === 1) await redis.expire(key, ttlUntilNextUtcMidnightSec())
-    if (count > FREE_PER_DAY) {
-      await redis.decr(key)
+    const deviceCount = await takeFreeCount(redis, deviceKey)
+    const ipCount = await takeFreeCount(redis, ipKey)
+    if (deviceCount > FREE_PER_DAY || ipCount > FREE_PER_DAY) {
+      await giveBackFreeCount(redis, deviceKey)
+      await giveBackFreeCount(redis, ipKey)
       return { ok: false, error: 'quota_exceeded' }
     }
     return { ok: true }
@@ -184,15 +203,14 @@ export async function reserveFreeSlot(
   }
 }
 
-export async function refundFreeSlot(req: Request): Promise<void> {
+export async function refundFreeSlot(req: Request, walletId: string): Promise<void> {
   const redis = getRedis()
   if (!redis) return
   try {
-    const key = freeKey(identityKey(req))
-    const next = await redis.decr(key)
-    if (next < 0) await redis.set(key, 0)
+    await giveBackFreeCount(redis, freeDeviceKey(walletId))
+    await giveBackFreeCount(redis, freeIpKey(identityKey(req)))
   } catch {
-    // 退还失败只影响当天额度，不阻断错误响应
+    // 退还失败只影响这次免费额度，不阻断错误响应
   }
 }
 
@@ -271,7 +289,7 @@ export async function claimCheckoutOnce(txnId: string): Promise<'ok' | 'duplicat
   const redis = getRedis()
   if (!redis) return 'unavailable'
   try {
-    const ok = await redis.set(`checkout:paddle:${txnId}`, '1', 'EX', 60 * 60 * 24 * 30, 'NX')
+    const ok = await redis.set(`checkout:order:${txnId}`, '1', 'EX', 60 * 60 * 24 * 30, 'NX')
     return ok === 'OK' ? 'ok' : 'duplicate'
   } catch {
     return 'unavailable'
@@ -282,7 +300,7 @@ export async function releaseCheckoutClaim(txnId: string): Promise<void> {
   const redis = getRedis()
   if (!redis) return
   try {
-    await redis.del(`checkout:paddle:${txnId}`)
+    await redis.del(`checkout:order:${txnId}`)
   } catch {
     // ignore
   }

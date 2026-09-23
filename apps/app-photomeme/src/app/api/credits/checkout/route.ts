@@ -1,16 +1,15 @@
 import { NextResponse } from 'next/server'
 import { findPack, isCheckoutEnabled } from '@/lib/billing'
-import { createHdCheckout } from '@/lib/paddle'
+import { createCreemCheckout } from '@/lib/creem'
 import { applyWalletCookie, ensureWalletId } from '@/lib/wallet'
 
 export const runtime = 'nodejs'
 
 /**
  * POST /api/credits/checkout  { packId?: string }
- * 创建 Paddle transaction，返回 transactionId（前端用 Paddle.js 覆盖层打开）
- * 与兜底用的 Hosted Checkout URL。
+ * 创建 Creem checkout，返回托管收银台地址。
  * packId 只用来在服务端配置里挑一个点数包——点数和价格都取自服务端，不信前端。
- * 入账以 webhook transaction.completed 为准；回站后再走 /api/credits/confirm 兜底。
+ * 入账以 webhook checkout.completed 为准；回站后再走 /api/credits/confirm 兜底。
  */
 export async function POST(req: Request): Promise<NextResponse> {
   let packId = ''
@@ -47,7 +46,7 @@ export async function POST(req: Request): Promise<NextResponse> {
     return res
   }
 
-  const created = await createHdCheckout(wallet.id, pack)
+  const created = await createCreemCheckout(wallet.id, pack)
   if (!created.ok) {
     const res = NextResponse.json(
       { ok: false, error: { code: 'CHECKOUT_FAILED', message: created.message } },

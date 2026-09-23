@@ -30,7 +30,9 @@ export function ensureWalletId(req: Request): { id: string; created: boolean } {
 
 function cookieBase(): string {
   const secure = process.env.NODE_ENV === 'production' ? '; Secure' : ''
-  return `Path=/; Max-Age=${60 * 60 * 24 * 365}; SameSite=Lax; HttpOnly${secure}`
+  const maxAge = 60 * 60 * 24 * 365
+  const expires = new Date(Date.now() + maxAge * 1000).toUTCString()
+  return `Path=/; Max-Age=${maxAge}; Expires=${expires}; SameSite=Lax; HttpOnly${secure}`
 }
 
 export function applyWalletCookie(res: NextResponse, walletId: string): void {

@@ -8,6 +8,6 @@ export async function GET(req: Request): Promise<NextResponse> {
   const wallet = ensureWalletId(req)
   const quota = await getQuotaSnapshot(req, wallet.id)
   const res = NextResponse.json({ ok: true, data: quota })
-  if (wallet.created) applyWalletCookie(res, wallet.id)
+  applyWalletCookie(res, wallet.id)
   return res
 }

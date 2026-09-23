@@ -23,7 +23,7 @@ export const CREDITS_PER_PURCHASE = Math.max(
 export const CREDIT_TTL_DAYS = Math.max(0, Number(process.env.CREDIT_TTL_DAYS ?? '0') || 0)
 export const CREDIT_TTL_MS = CREDIT_TTL_DAYS * 24 * 60 * 60 * 1000
 
-/** 一个可购买的点数包。价格实体在 Paddle，这里只存展示值与 price_id。 */
+/** 一个可购买的点数包。价格实体在 Creem，priceId 存的是商品 id。 */
 export interface CreditPack {
   id: string
   credits: number
@@ -47,20 +47,17 @@ function giftUnitLabel(cents: number, count: number): string {
 }
 
 export function currentPriceId(): string {
-  return (
-    (process.env.PADDLE_PRICE_ID ?? '').trim() ||
-    (process.env.NEXT_PUBLIC_PADDLE_PRICE_ID ?? '').trim()
-  )
+  return (process.env.CREEM_PRODUCT_ID ?? '').trim()
 }
 
 /**
- * 点数包配置。优先读 `PADDLE_PACKS`，格式为
- *   id:点数:美分:price_id,id:点数:美分:price_id
- * 例如 PADDLE_PACKS=starter:10:299:pri_aaa,pro:30:699:pri_bbb,max:100:1499:pri_ccc
- * 未配置时退化成单包（旧的 PADDLE_PRICE_ID 写法），保证老环境变量继续可用。
+ * 点数包配置。读 `CREEM_PACKS`，格式为
+ *   id:点数:美分:product_id,id:点数:美分:product_id
+ * 例如 CREEM_PACKS=single:5:1999:prod_aaa,trio:15:4499:prod_bbb,quint:25:6999:prod_ccc
+ * 未配置时退化成单包（CREEM_PRODUCT_ID）。
  */
 export function creditPacks(): CreditPack[] {
-  const raw = (process.env.PADDLE_PACKS ?? '').trim()
+  const raw = (process.env.CREEM_PACKS ?? '').trim()
 
   if (!raw) {
     const priceId = currentPriceId()
@@ -135,7 +132,7 @@ export function isDevCreditGrantEnabled(): boolean {
 }
 
 export function isCheckoutEnabled(): boolean {
-  if (!(process.env.PADDLE_API_KEY ?? '').trim()) return false
+  if (!(process.env.CREEM_API_KEY ?? '').trim()) return false
   return creditPacks().length > 0
 }
 

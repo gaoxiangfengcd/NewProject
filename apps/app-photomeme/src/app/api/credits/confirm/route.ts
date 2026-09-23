@@ -1,11 +1,10 @@
 import { NextResponse } from 'next/server'
-import { CREDITS_PER_PURCHASE } from '@/lib/billing'
 import {
-  getPaddleTransaction,
-  paddleApiKey,
-  paddlePaymentSettled,
-  parseWalletFromCustomData,
-} from '@/lib/paddle'
+  creemApiKey,
+  creemPaymentSettled,
+  getCreemCheckout,
+  grantFromCheckout,
+} from '@/lib/creem'
 import {
   addPaidCredits,
   addPaidCreditsToWallet,
@@ -17,15 +16,16 @@ import { applyDevCreditsCookie, applyWalletCookie, ensureWalletId } from '@/lib/
 
 export const runtime = 'nodejs'
 
-const TXN_ID = /^txn_[A-Za-z0-9]+$/
+const CHECKOUT_ID = /^ch_[A-Za-z0-9]+$/
 
 /**
  * POST /api/credits/confirm  { transactionId }
- * Paddle 付款成功回站后入账（与 webhook 共用同一幂等键，不会加两次）。
+ * Creem 付款成功回站后入账。transactionId 是 checkout id（ch_...）。
+ * 与 webhook 共用同一幂等键，不会加两次。
  */
 export async function POST(req: Request): Promise<NextResponse> {
   const wallet = ensureWalletId(req)
-  if (!paddleApiKey()) {
+  if (!creemApiKey()) {
     return NextResponse.json(
       { ok: false, error: { code: 'CHECKOUT_UNAVAILABLE', message: 'Card checkout is not configured yet.' } },
       { status: 501 },
@@ -39,14 +39,14 @@ export async function POST(req: Request): Promise<NextResponse> {
   } catch {
     transactionId = ''
   }
-  if (!TXN_ID.test(transactionId)) {
+  if (!CHECKOUT_ID.test(transactionId)) {
     return NextResponse.json(
       { ok: false, error: { code: 'INVALID_SESSION', message: 'Missing checkout transaction.' } },
       { status: 400 },
     )
   }
 
-  const fetched = await getPaddleTransaction(transactionId)
+  const fetched = await getCreemCheckout(transactionId)
   if (!fetched.ok) {
     return NextResponse.json(
       { ok: false, error: { code: 'CONFIRM_FAILED', message: fetched.message } },
@@ -54,18 +54,24 @@ export async function POST(req: Request): Promise<NextResponse> {
     )
   }
 
-  if (!paddlePaymentSettled(fetched.transaction.status)) {
+  if (!creemPaymentSettled(fetched.checkout)) {
     return NextResponse.json(
       { ok: false, error: { code: 'NOT_PAID', message: 'Payment is not complete yet.' } },
       { status: 402 },
     )
   }
 
-  const parsed = parseWalletFromCustomData(fetched.transaction.customData)
+  const parsed = grantFromCheckout(fetched.checkout)
   const claimedWallet = parsed?.walletId || wallet.id
-  const credits = parsed?.credits ?? CREDITS_PER_PURCHASE
+  const credits = parsed?.credits
+  if (!credits) {
+    return NextResponse.json(
+      { ok: false, error: { code: 'CONFIRM_FAILED', message: 'Could not match this payment to a gift pack.' } },
+      { status: 400 },
+    )
+  }
 
-  const claimed = await claimCheckoutOnce(fetched.transaction.id)
+  const claimed = await claimCheckoutOnce(fetched.checkout.id)
   if (claimed === 'unavailable') {
     return NextResponse.json(
       {
@@ -95,7 +101,7 @@ export async function POST(req: Request): Promise<NextResponse> {
 
   const added = await addPaidCredits(req, claimedWallet, credits)
   if (!added.ok) {
-    await releaseCheckoutClaim(fetched.transaction.id)
+    await releaseCheckoutClaim(fetched.checkout.id)
     return NextResponse.json(
       {
         ok: false,

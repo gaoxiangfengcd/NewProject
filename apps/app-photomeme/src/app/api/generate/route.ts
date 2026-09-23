@@ -15,6 +15,7 @@ import {
   refundPaidCredit,
   reserveFreeSlot,
 } from '@/lib/quota'
+import { screenGenerationPrompt } from '@/lib/creem'
 import { applyDevCreditsCookie, applyWalletCookie, ensureWalletId } from '@/lib/wallet'
 import {
   newShareId,
@@ -42,7 +43,7 @@ function attachSession(
   wallet: { id: string; created: boolean },
   cookieCredits?: number,
 ): NextResponse {
-  if (wallet.created) applyWalletCookie(res, wallet.id)
+  applyWalletCookie(res, wallet.id)
   if (typeof cookieCredits === 'number') applyDevCreditsCookie(res, cookieCredits)
   return res
 }
@@ -200,7 +201,7 @@ export async function POST(req: Request): Promise<NextResponse> {
     consumedPaid = true
     cookieCredits = paid.cookieCredits
   } else {
-    const free = await reserveFreeSlot(req)
+    const free = await reserveFreeSlot(req, wallet.id)
     if (!free.ok) {
       if (free.error === 'quota_exceeded') {
         const quota = await getQuotaSnapshot(req, wallet.id)
@@ -224,7 +225,7 @@ export async function POST(req: Request): Promise<NextResponse> {
   try {
     storage = getStorageProvider()
   } catch {
-    if (reservedFree) await refundFreeSlot(req)
+    if (reservedFree) await refundFreeSlot(req, wallet.id)
     if (consumedPaid) cookieCredits = await refundPaidCredit(wallet.id, cookieCredits)
     return attachSession(
       jsonError(503, 'STORAGE_UNAVAILABLE', 'The generator is temporarily unavailable.'),
@@ -240,7 +241,7 @@ export async function POST(req: Request): Promise<NextResponse> {
     contentType: validation.mime,
   })
   if (!inputUpload.ok) {
-    if (reservedFree) await refundFreeSlot(req)
+    if (reservedFree) await refundFreeSlot(req, wallet.id)
     if (consumedPaid) cookieCredits = await refundPaidCredit(wallet.id, cookieCredits)
     logger.error('input upload failed', { id, message: inputUpload.error.message })
     return attachSession(
@@ -253,6 +254,12 @@ export async function POST(req: Request): Promise<NextResponse> {
   try {
     console.log('[route] ---- reasoning done ----')
     const prompt = buildExaggerationPrompt(style, twist || undefined, tier, null)
+    const screened = await screenGenerationPrompt(prompt, wallet.id)
+    if (!screened.ok) {
+      if (reservedFree) await refundFreeSlot(req, wallet.id)
+      if (consumedPaid) cookieCredits = await refundPaidCredit(wallet.id, cookieCredits)
+      return attachSession(jsonError(422, 'CONTENT_BLOCKED', screened.message), wallet, cookieCredits)
+    }
     const model = modelForTier(tier)
     console.log('[generate] using provider:', provider)
     console.log('[generate] provider:', provider)
@@ -261,7 +268,7 @@ export async function POST(req: Request): Promise<NextResponse> {
     const failGeneration = async (result: {
       error: { code: string; details?: unknown }
     }): Promise<NextResponse> => {
-      if (reservedFree) await refundFreeSlot(req)
+      if (reservedFree) await refundFreeSlot(req, wallet.id)
       if (consumedPaid) cookieCredits = await refundPaidCredit(wallet.id, cookieCredits)
       logger.error('image generation failed', {
         id,
@@ -300,7 +307,7 @@ export async function POST(req: Request): Promise<NextResponse> {
     })
     if (!generated.ok) {
       if (generated.error.code === 'SEEDREAM_CONFIG' || generated.error.code === 'SEEDREAM_FAILED') {
-        if (reservedFree) await refundFreeSlot(req)
+        if (reservedFree) await refundFreeSlot(req, wallet.id)
         if (consumedPaid) cookieCredits = await refundPaidCredit(wallet.id, cookieCredits)
         const message = String(
           (generated.error.details as { message?: unknown } | undefined)?.message ??
@@ -317,7 +324,7 @@ export async function POST(req: Request): Promise<NextResponse> {
         )
       }
       if (generated.error.code === 'RESULT_FETCH_FAILED') {
-        if (reservedFree) await refundFreeSlot(req)
+        if (reservedFree) await refundFreeSlot(req, wallet.id)
         if (consumedPaid) cookieCredits = await refundPaidCredit(wallet.id, cookieCredits)
         return attachSession(
           jsonError(502, 'RESULT_FETCH_FAILED', 'Could not download the generated image.'),
@@ -357,7 +364,7 @@ export async function POST(req: Request): Promise<NextResponse> {
       contentType: prepared.contentType,
     })
     if (!outputUpload.ok) {
-      if (reservedFree) await refundFreeSlot(req)
+      if (reservedFree) await refundFreeSlot(req, wallet.id)
       if (consumedPaid) cookieCredits = await refundPaidCredit(wallet.id, cookieCredits)
       logger.error('output upload failed', { id, message: outputUpload.error.message })
       return attachSession(
@@ -411,7 +418,7 @@ export async function POST(req: Request): Promise<NextResponse> {
       cookieCredits,
     )
   } catch (e) {
-    if (reservedFree) await refundFreeSlot(req)
+    if (reservedFree) await refundFreeSlot(req, wallet.id)
     if (consumedPaid) cookieCredits = await refundPaidCredit(wallet.id, cookieCredits)
     const message = e instanceof Error ? e.message : String(e)
     logger.error('generate route error', { id, message })

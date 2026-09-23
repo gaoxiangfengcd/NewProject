@@ -16,7 +16,8 @@ export default function PrivacyPage(): React.ReactElement {
       <h2>The short version</h2>
       <p>
         {SITE_NAME} does not require an account. We do not ask for your name, email or password.
-        Your photos are used only to generate your meme and are automatically deleted after{' '}
+        Your photos are used only as a reference to draw a cartoon character. They are not used to
+        swap or change a real face. Photos and cartoons are automatically deleted after{' '}
         {RETENTION_DAYS} days.
       </p>
 
@@ -49,10 +50,10 @@ export default function PrivacyPage(): React.ReactElement {
 
       <h2>Payments</h2>
       <p>
-        Paid HD unlocks are processed by <strong>Paddle</strong> (Paddle.com is the Merchant of
-        Record). Paddle receives the information needed to complete checkout. We store a wallet id
-        and credit balance so your purchase can be applied after you return to the site. We do not
-        store full card numbers.
+        Paid HD unlocks are processed by <strong>Creem</strong> (Creem is the Merchant of Record).
+        Creem receives the information needed to complete checkout. We store a wallet id and credit
+        balance so your purchase can be applied after you return to the site. We do not store full
+        card numbers.
       </p>
 
       <h2>Cookies</h2>
