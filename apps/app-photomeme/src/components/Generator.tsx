@@ -84,7 +84,7 @@ export function Generator(): React.ReactElement {
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
-    const checkoutId = params.get('checkout_id')
+    const checkoutId = params.get('token') || params.get('checkout_id')
     const paidReturn = params.get('checkout') === 'success' || Boolean(checkoutId)
     if (!paidReturn) return
 
@@ -99,7 +99,7 @@ export function Generator(): React.ReactElement {
         setQuota(json.data as QuotaSnapshot)
         setPaywall(false)
         setError(null)
-        track('credits_granted', { source: 'creem' })
+        track('credits_granted', { source: 'paypal' })
         return true
       }
       return false
@@ -635,7 +635,7 @@ export function Generator(): React.ReactElement {
                 )}
               </div>
               <p className="text-xs text-muted-foreground">
-                Payments are handled by Creem (Merchant of Record). Unused generations are
+                Payments are handled by PayPal. Unused generations are
                 refundable within 14 days — see the{' '}
                 <Link href="/refund" className="font-medium text-primary underline-offset-2 hover:underline">
                   refund policy

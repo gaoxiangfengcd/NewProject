@@ -1,10 +1,5 @@
 import { NextResponse } from 'next/server'
-import {
-  creemApiKey,
-  creemPaymentSettled,
-  getCreemCheckout,
-  grantFromCheckout,
-} from '@/lib/creem'
+import { capturePayPalOrder, paypalConfigured } from '@/lib/paypal'
 import {
   addPaidCredits,
   addPaidCreditsToWallet,
@@ -16,16 +11,16 @@ import { applyDevCreditsCookie, applyWalletCookie, ensureWalletId } from '@/lib/
 
 export const runtime = 'nodejs'
 
-const CHECKOUT_ID = /^ch_[A-Za-z0-9]+$/
+const ORDER_ID = /^[A-Z0-9]{10,20}$/
 
 /**
  * POST /api/credits/confirm  { transactionId }
- * Creem 付款成功回站后入账。transactionId 是 checkout id（ch_...）。
- * 与 webhook 共用同一幂等键，不会加两次。
+ * PayPal 回站后的订单号在 token 里。先 capture，再按订单金额入账。
+ * 与 webhook 共用同一订单号，不会加两次。
  */
 export async function POST(req: Request): Promise<NextResponse> {
   const wallet = ensureWalletId(req)
-  if (!creemApiKey()) {
+  if (!paypalConfigured()) {
     return NextResponse.json(
       { ok: false, error: { code: 'CHECKOUT_UNAVAILABLE', message: 'Card checkout is not configured yet.' } },
       { status: 501 },
@@ -39,39 +34,30 @@ export async function POST(req: Request): Promise<NextResponse> {
   } catch {
     transactionId = ''
   }
-  if (!CHECKOUT_ID.test(transactionId)) {
+  if (!ORDER_ID.test(transactionId)) {
     return NextResponse.json(
       { ok: false, error: { code: 'INVALID_SESSION', message: 'Missing checkout transaction.' } },
       { status: 400 },
     )
   }
 
-  const fetched = await getCreemCheckout(transactionId)
-  if (!fetched.ok) {
+  const captured = await capturePayPalOrder(transactionId)
+  if (!captured.ok) {
     return NextResponse.json(
-      { ok: false, error: { code: 'CONFIRM_FAILED', message: fetched.message } },
-      { status: 502 },
+      {
+        ok: false,
+        error: {
+          code: captured.unpaid ? 'NOT_PAID' : 'CONFIRM_FAILED',
+          message: captured.message,
+        },
+      },
+      { status: captured.unpaid ? 402 : 502 },
     )
   }
 
-  if (!creemPaymentSettled(fetched.checkout)) {
-    return NextResponse.json(
-      { ok: false, error: { code: 'NOT_PAID', message: 'Payment is not complete yet.' } },
-      { status: 402 },
-    )
-  }
-
-  const parsed = grantFromCheckout(fetched.checkout)
-  const claimedWallet = parsed?.walletId || wallet.id
-  const credits = parsed?.credits
-  if (!credits) {
-    return NextResponse.json(
-      { ok: false, error: { code: 'CONFIRM_FAILED', message: 'Could not match this payment to a gift pack.' } },
-      { status: 400 },
-    )
-  }
-
-  const claimed = await claimCheckoutOnce(fetched.checkout.id)
+  const claimedWallet = captured.grant.walletId || wallet.id
+  const credits = captured.grant.credits
+  const claimed = await claimCheckoutOnce(captured.grant.orderId)
   if (claimed === 'unavailable') {
     return NextResponse.json(
       {
@@ -101,7 +87,7 @@ export async function POST(req: Request): Promise<NextResponse> {
 
   const added = await addPaidCredits(req, claimedWallet, credits)
   if (!added.ok) {
-    await releaseCheckoutClaim(fetched.checkout.id)
+    await releaseCheckoutClaim(captured.grant.orderId)
     return NextResponse.json(
       {
         ok: false,

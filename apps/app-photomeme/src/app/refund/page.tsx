@@ -4,7 +4,7 @@ import { CREDIT_TTL_DAYS, creditPacks } from '@/lib/billing'
 
 export const metadata: Metadata = {
   title: 'Refund Policy',
-  description: `How refunds work for ${SITE_NAME} gifts, processed by Creem.`,
+  description: `How refunds work for ${SITE_NAME} gifts, processed by PayPal.`,
   alternates: { canonical: '/refund' },
 }
 
@@ -94,11 +94,11 @@ export default function RefundPage(): React.ReactElement {
       </p>
       <ul>
         <li>the email address used at checkout, and</li>
-        <li>your Creem order ID (it looks like <code>ord_...</code> and is in your receipt).</li>
+        <li>your PayPal transaction ID (it is in your PayPal receipt).</li>
       </ul>
       <p>
         We aim to reply within 2 business days. Approved refunds are processed by{' '}
-        <strong>Creem</strong>, our Merchant of Record, and go back to your original payment
+        <strong>PayPal</strong> and go back to your original payment
         method — usually within 5–10 business days, depending on your bank or card issuer.
       </p>
 

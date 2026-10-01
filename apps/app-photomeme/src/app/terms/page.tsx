@@ -31,10 +31,10 @@ export default function TermsPage(): React.ReactElement {
 
       <h2>Paid unlocks</h2>
       <p>
-        HD purchases are processed by Creem, who is the Merchant of Record. We never see your full
-        card number. Each pack adds a set number of HD generations to your wallet (stored in our
-        credits ledger). Remaining generations never expire. Unused HD credits may be refunded by
-        emailing us with your Creem order ID.
+        HD purchases are processed by PayPal. We never see your full card number. Each pack adds a
+        set number of HD generations to your wallet (stored in our credits ledger). Remaining
+        generations never expire. Unused HD credits may be refunded by emailing us with your PayPal
+        transaction ID.
       </p>
 
       <h2>Your content</h2>

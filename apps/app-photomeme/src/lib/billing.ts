@@ -12,18 +12,18 @@ export const DEV_CREDITS_COOKIE = 'memego_pc'
 export const FREE_PER_DAY = Math.max(1, Number(process.env.FREE_GENERATIONS_PER_DAY ?? '1') || 1)
 export const PAID_PRICE_CENTS = Math.max(
   1,
-  Number(process.env.PAID_PRICE_CENTS ?? '1999') || 1999,
+  Number(process.env.PAID_PRICE_CENTS ?? '499') || 499,
 )
 export const CREDITS_PER_PURCHASE = Math.max(
   1,
-  Number(process.env.PAID_CREDITS_PER_PURCHASE ?? '1') || 1,
+  Number(process.env.PAID_CREDITS_PER_PURCHASE ?? '5') || 5,
 )
 
 /** 点数有效期（天）。0 = 永不过期。购买后剩余次数一直有效。 */
 export const CREDIT_TTL_DAYS = Math.max(0, Number(process.env.CREDIT_TTL_DAYS ?? '0') || 0)
 export const CREDIT_TTL_MS = CREDIT_TTL_DAYS * 24 * 60 * 60 * 1000
 
-/** 一个可购买的点数包。价格实体在 Creem，priceId 存的是商品 id。 */
+/** 一个可购买的点数包。金额由我们传给 PayPal，priceId 只作包 id。 */
 export interface CreditPack {
   id: string
   credits: number
@@ -46,28 +46,21 @@ function giftUnitLabel(cents: number, count: number): string {
   return `${money(Math.round(cents / Math.max(1, count)))} each`
 }
 
-export function currentPriceId(): string {
-  return (process.env.CREEM_PRODUCT_ID ?? '').trim()
-}
-
 /**
- * 点数包配置。读 `CREEM_PACKS`，格式为
- *   id:点数:美分:product_id,id:点数:美分:product_id
- * 例如 CREEM_PACKS=single:5:1999:prod_aaa,trio:15:4499:prod_bbb,quint:25:6999:prod_ccc
- * 未配置时退化成单包（CREEM_PRODUCT_ID）。
+ * 点数包。读 `PAYPAL_PACKS`，格式 id:点数:美分。
+ * 例如 PAYPAL_PACKS=single:5:499
+ * 不配时用默认一档：5 次 / 4.99 美元。
  */
 export function creditPacks(): CreditPack[] {
-  const raw = (process.env.CREEM_PACKS ?? '').trim()
+  const raw = (process.env.PAYPAL_PACKS ?? '').trim()
 
   if (!raw) {
-    const priceId = currentPriceId()
-    if (!priceId) return []
     return [
       {
-        id: 'default',
+        id: 'single',
         credits: CREDITS_PER_PURCHASE,
         priceCents: PAID_PRICE_CENTS,
-        priceId,
+        priceId: 'single',
         priceLabel: money(PAID_PRICE_CENTS),
         unitLabel: giftUnitLabel(PAID_PRICE_CENTS, CREDITS_PER_PURCHASE),
       },
@@ -76,9 +69,10 @@ export function creditPacks(): CreditPack[] {
 
   const packs: CreditPack[] = []
   for (const chunk of raw.split(/[,;]/)) {
-    const [rawId, creditsRaw, centsRaw, priceId] = chunk.split(':').map((s) => s.trim())
+    const [rawId, creditsRaw, centsRaw] = chunk.split(':').map((s) => s.trim())
     const id = (rawId ?? '').toLowerCase()
-    if (!PACK_ID_RE.test(id) || !priceId) continue
+    const priceId = id
+    if (!PACK_ID_RE.test(id)) continue
     const credits = Math.floor(Number(creditsRaw))
     const priceCents = Math.floor(Number(centsRaw))
     if (!Number.isFinite(credits) || credits < 1) continue
@@ -132,7 +126,9 @@ export function isDevCreditGrantEnabled(): boolean {
 }
 
 export function isCheckoutEnabled(): boolean {
-  if (!(process.env.CREEM_API_KEY ?? '').trim()) return false
+  const id = (process.env.PAYPAL_CLIENT_ID ?? '').trim()
+  const secret = (process.env.PAYPAL_CLIENT_SECRET ?? '').trim()
+  if (!id || !secret) return false
   return creditPacks().length > 0
 }
 

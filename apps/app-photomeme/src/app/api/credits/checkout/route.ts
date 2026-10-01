@@ -1,15 +1,15 @@
 import { NextResponse } from 'next/server'
 import { findPack, isCheckoutEnabled } from '@/lib/billing'
-import { createCreemCheckout } from '@/lib/creem'
+import { createPayPalCheckout } from '@/lib/paypal'
 import { applyWalletCookie, ensureWalletId } from '@/lib/wallet'
 
 export const runtime = 'nodejs'
 
 /**
  * POST /api/credits/checkout  { packId?: string }
- * 创建 Creem checkout，返回托管收银台地址。
+ * 创建 PayPal 订单，返回买家去付款的地址。
  * packId 只用来在服务端配置里挑一个点数包——点数和价格都取自服务端，不信前端。
- * 入账以 webhook checkout.completed 为准；回站后再走 /api/credits/confirm 兜底。
+ * 入账以回站后的 capture 为准，webhook 再兜一次，同一订单不会加两次。
  */
 export async function POST(req: Request): Promise<NextResponse> {
   let packId = ''
@@ -46,7 +46,7 @@ export async function POST(req: Request): Promise<NextResponse> {
     return res
   }
 
-  const created = await createCreemCheckout(wallet.id, pack)
+  const created = await createPayPalCheckout(wallet.id, pack)
   if (!created.ok) {
     const res = NextResponse.json(
       { ok: false, error: { code: 'CHECKOUT_FAILED', message: created.message } },

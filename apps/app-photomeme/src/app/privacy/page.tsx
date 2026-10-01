@@ -50,10 +50,9 @@ export default function PrivacyPage(): React.ReactElement {
 
       <h2>Payments</h2>
       <p>
-        Paid HD unlocks are processed by <strong>Creem</strong> (Creem is the Merchant of Record).
-        Creem receives the information needed to complete checkout. We store a wallet id and credit
-        balance so your purchase can be applied after you return to the site. We do not store full
-        card numbers.
+        Paid HD unlocks are processed by <strong>PayPal</strong>. PayPal receives the information
+        needed to complete checkout. We store a wallet id and credit balance so your purchase can be
+        applied after you return to the site. We do not store full card numbers.
       </p>
 
       <h2>Cookies</h2>
