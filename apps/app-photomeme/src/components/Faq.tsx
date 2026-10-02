@@ -27,7 +27,7 @@ const FAQS = [
   },
   {
     q: 'Do I need an account?',
-    a: 'Nope. No sign-up, no password, no email. Upload a photo and see your preview in seconds.',
+    a: 'No. No sign-up, no password, no email — you can pay and download straight away. Generations stay on this browser. After checkout, save the restore code on the page, or the transaction ID in your PayPal receipt. Enter either one on another computer to bring over the generations you have not used yet.',
   },
   {
     q: 'What happens to my photos?',

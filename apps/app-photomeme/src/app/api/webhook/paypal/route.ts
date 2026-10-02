@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { logger } from '@repo/common'
 import { grantFromPayPalCapture, verifyPayPalWebhook } from '@/lib/paypal'
-import { addPaidCreditsToWallet, claimCheckoutOnce, releaseCheckoutClaim } from '@/lib/quota'
+import { addPaidCreditsToWallet, claimCheckoutOnce, ensureRecoveryCode, releaseCheckoutClaim } from '@/lib/quota'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -47,7 +47,7 @@ export async function POST(req: Request): Promise<NextResponse> {
     return NextResponse.json({ ok: false, error: { code: 'MISSING_WALLET' } }, { status: 400 })
   }
 
-  const claimed = await claimCheckoutOnce(parsed.orderId)
+  const claimed = await claimCheckoutOnce(parsed.orderId, parsed.walletId)
   if (claimed === 'duplicate') {
     return NextResponse.json({ ok: true, alreadyGranted: true, transactionId: parsed.orderId })
   }
@@ -62,6 +62,7 @@ export async function POST(req: Request): Promise<NextResponse> {
     return NextResponse.json({ ok: false, error: { code: 'CREDIT_GRANT_FAILED' } }, { status: 503 })
   }
 
+  await ensureRecoveryCode(parsed.walletId)
   logger.info('paypal credits granted', {
     orderId: parsed.orderId,
     walletId: parsed.walletId,

@@ -199,6 +199,30 @@ export async function capturePayPalOrder(
   return { ok: true, grant }
 }
 
+/** 只用交易号找回钱包，不扣款、不加次数。订单号或 Capture 号都可以。 */
+export async function lookupPayPalWallet(paymentId: string): Promise<string | null> {
+  const token = await accessToken()
+  if (!token) return null
+  const headers = { Authorization: `Bearer ${token}` }
+
+  const orderRes = await fetch(`${apiBase()}/v2/checkout/orders/${encodeURIComponent(paymentId)}`, { headers })
+  if (orderRes.ok) {
+    const order = (await orderRes.json()) as Record<string, unknown>
+    if (order.status !== 'COMPLETED') return null
+    return grantFromOrder(order, paymentId)?.walletId ?? null
+  }
+
+  const captureRes = await fetch(`${apiBase()}/v2/payments/captures/${encodeURIComponent(paymentId)}`, {
+    headers,
+  })
+  if (!captureRes.ok) return null
+  const capture = (await captureRes.json()) as { status?: string; custom_id?: string }
+  if (capture.status !== 'COMPLETED') return null
+  const walletId = capture.custom_id ?? ''
+  if (!WALLET_RE.test(walletId)) return null
+  return walletId
+}
+
 export async function verifyPayPalWebhook(rawBody: string, headers: Headers): Promise<boolean> {
   const webhookId = (process.env.PAYPAL_WEBHOOK_ID ?? '').trim()
   const token = await accessToken()

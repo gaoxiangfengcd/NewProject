@@ -393,7 +393,7 @@ export const SEO_LANDING_PAGES: SeoLandingPage[] = [
       },
       {
         q: 'Do I need an account?',
-        a: 'No. No app, no password. That is part of why it works at the last minute.',
+        a: 'No. No app, no password. That is part of why it works at the last minute. Save the restore code after checkout, or the transaction ID in your PayPal receipt, if you may finish on another device.',
       },
     ],
     related: ['digital-gifts', 'funny-gifts', 'gifts-for-friends', 'gifts-for-someone-who-has-everything'],

@@ -1,3 +1,4 @@
+import { randomInt } from 'node:crypto'
 import type { Redis } from 'ioredis'
 import { getClientIp } from './rate-limit'
 import { getRedis } from './redis'
@@ -285,11 +286,166 @@ export async function addPaidCredits(
   return { ok: true, cookieCredits: readDevCreditsCookie(req) + n }
 }
 
-export async function claimCheckoutOnce(txnId: string): Promise<'ok' | 'duplicate' | 'unavailable'> {
+const WALLET_RE = /^[A-Za-z0-9_-]{8,64}$/
+const RECOVERY_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
+const RECOVERY_CODE_RE = /^[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{8}$/
+
+function walletRecoveryKey(walletId: string): string {
+  return `wallet:${walletId}:recovery`
+}
+
+function recoveryCodeKey(code: string): string {
+  return `recovery:${code}`
+}
+
+function mintRecoveryCode(): string {
+  let out = ''
+  for (let i = 0; i < 8; i++) {
+    out += RECOVERY_ALPHABET[randomInt(RECOVERY_ALPHABET.length)]
+  }
+  return out
+}
+
+/**
+ * 一张钱包一个恢复码。换电脑时把码（或 PayPal 交易号）填到新浏览器，
+ * 剩余次数整包挪过去，码仍指向拿着次数的那张钱包。
+ */
+export async function ensureRecoveryCode(walletId: string): Promise<string | null> {
+  const redis = getRedis()
+  if (!redis || !WALLET_RE.test(walletId)) return null
+  try {
+    const key = walletRecoveryKey(walletId)
+    const existing = await redis.get(key)
+    if (existing && RECOVERY_CODE_RE.test(existing)) {
+      const owner = await redis.get(recoveryCodeKey(existing))
+      if (owner === walletId) return existing
+      await redis.del(key)
+    }
+    for (let attempt = 0; attempt < 5; attempt++) {
+      const code = mintRecoveryCode()
+      const reserved = await redis.set(recoveryCodeKey(code), walletId, 'NX')
+      if (reserved !== 'OK') continue
+      const saved = await redis.set(key, code, 'NX')
+      if (saved === 'OK') return code
+      await redis.del(recoveryCodeKey(code))
+      const winner = await redis.get(key)
+      if (winner && RECOVERY_CODE_RE.test(winner)) return winner
+    }
+    return null
+  } catch {
+    return null
+  }
+}
+
+export async function walletIdForRecoveryCode(code: string): Promise<string | null> {
+  const redis = getRedis()
+  if (!redis || !RECOVERY_CODE_RE.test(code)) return null
+  try {
+    const owner = await redis.get(recoveryCodeKey(code))
+    if (!owner || !WALLET_RE.test(owner)) return null
+    return owner
+  } catch {
+    return null
+  }
+}
+
+export async function readCheckoutWallet(txnId: string): Promise<string | null> {
+  const redis = getRedis()
+  if (!redis) return null
+  try {
+    const stored = await redis.get(`checkout:order:${txnId}`)
+    if (!stored || !WALLET_RE.test(stored)) return null
+    return stored
+  } catch {
+    return null
+  }
+}
+
+const MOVE_CREDITS_SCRIPT = `
+local owner = redis.call('GET', KEYS[3])
+if not owner or owner ~= ARGV[1] then
+  return -1
+end
+local fields = redis.call('HGETALL', KEYS[1])
+local moved = 0
+local now = tonumber(ARGV[4])
+for i = 1, #fields, 2 do
+  local exp = tonumber(fields[i])
+  local n = tonumber(fields[i + 1])
+  if exp and n and n > 0 and exp > now then
+    redis.call('HINCRBY', KEYS[2], fields[i], n)
+    moved = moved + n
+  end
+end
+if moved <= 0 then
+  return -2
+end
+redis.call('DEL', KEYS[1])
+redis.call('SET', KEYS[3], ARGV[2])
+redis.call('SET', KEYS[5], ARGV[3])
+redis.call('DEL', KEYS[4])
+local ttl = tonumber(ARGV[5])
+if ttl > 0 then
+  redis.call('PEXPIRE', KEYS[2], ttl)
+else
+  redis.call('PERSIST', KEYS[2])
+end
+return moved
+`
+
+export async function movePaidCredits(
+  sourceWalletId: string,
+  destWalletId: string,
+): Promise<
+  | { ok: true; recoveryCode: string; moved: number; alreadyHere: boolean }
+  | { ok: false; error: 'not_found' | 'empty' | 'unavailable' }
+> {
+  const redis = getRedis()
+  if (!redis || !WALLET_RE.test(sourceWalletId) || !WALLET_RE.test(destWalletId)) {
+    return { ok: false, error: 'unavailable' }
+  }
+  if (sourceWalletId === destWalletId) {
+    const code = await ensureRecoveryCode(sourceWalletId)
+    if (!code) return { ok: false, error: 'unavailable' }
+    return { ok: true, recoveryCode: code, moved: 0, alreadyHere: true }
+  }
+
+  const code = await ensureRecoveryCode(sourceWalletId)
+  if (!code) return { ok: false, error: 'unavailable' }
+
+  try {
+    const moved = await redis.eval(
+      MOVE_CREDITS_SCRIPT,
+      5,
+      batchesKey(sourceWalletId),
+      batchesKey(destWalletId),
+      recoveryCodeKey(code),
+      walletRecoveryKey(sourceWalletId),
+      walletRecoveryKey(destWalletId),
+      sourceWalletId,
+      destWalletId,
+      code,
+      String(Date.now()),
+      String(CREDIT_TTL_MS > 0 ? CREDIT_TTL_MS + 86_400_000 : 0),
+    )
+    const count = Number(moved)
+    if (count === -1) return { ok: false, error: 'not_found' }
+    if (!Number.isFinite(count) || count <= 0) return { ok: false, error: 'empty' }
+    return { ok: true, recoveryCode: code, moved: count, alreadyHere: false }
+  } catch {
+    return { ok: false, error: 'unavailable' }
+  }
+}
+
+export async function claimCheckoutOnce(
+  txnId: string,
+  walletId = '',
+): Promise<'ok' | 'duplicate' | 'unavailable'> {
   const redis = getRedis()
   if (!redis) return 'unavailable'
   try {
-    const ok = await redis.set(`checkout:order:${txnId}`, '1', 'EX', 60 * 60 * 24 * 30, 'NX')
+    const value = WALLET_RE.test(walletId) ? walletId : '1'
+    const ok = await redis.set(`checkout:order:${txnId}`, value, 'EX', 60 * 60 * 24 * 30, 'NX')
     return ok === 'OK' ? 'ok' : 'duplicate'
   } catch {
     return 'unavailable'

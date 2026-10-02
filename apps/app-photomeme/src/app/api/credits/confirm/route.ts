@@ -4,6 +4,7 @@ import {
   addPaidCredits,
   addPaidCreditsToWallet,
   claimCheckoutOnce,
+  ensureRecoveryCode,
   getQuotaSnapshot,
   releaseCheckoutClaim,
 } from '@/lib/quota'
@@ -57,7 +58,7 @@ export async function POST(req: Request): Promise<NextResponse> {
 
   const claimedWallet = captured.grant.walletId || wallet.id
   const credits = captured.grant.credits
-  const claimed = await claimCheckoutOnce(captured.grant.orderId)
+  const claimed = await claimCheckoutOnce(captured.grant.orderId, claimedWallet)
   if (claimed === 'unavailable') {
     return NextResponse.json(
       {
@@ -72,7 +73,8 @@ export async function POST(req: Request): Promise<NextResponse> {
   }
   if (claimed === 'duplicate') {
     const quota = await getQuotaSnapshot(req, claimedWallet)
-    const res = NextResponse.json({ ok: true, data: quota, alreadyGranted: true })
+    const recoveryCode = quota.paidCredits > 0 ? await ensureRecoveryCode(claimedWallet) : null
+    const res = NextResponse.json({ ok: true, data: quota, alreadyGranted: true, recoveryCode })
     applyWalletCookie(res, claimedWallet)
     return res
   }
@@ -80,7 +82,8 @@ export async function POST(req: Request): Promise<NextResponse> {
   const addedRedis = await addPaidCreditsToWallet(claimedWallet, credits)
   if (addedRedis.ok) {
     const quota = await getQuotaSnapshot(req, claimedWallet)
-    const res = NextResponse.json({ ok: true, data: quota })
+    const recoveryCode = await ensureRecoveryCode(claimedWallet)
+    const res = NextResponse.json({ ok: true, data: quota, recoveryCode })
     applyWalletCookie(res, claimedWallet)
     return res
   }

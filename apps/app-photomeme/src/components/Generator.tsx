@@ -33,6 +33,12 @@ const LOADING_LINES = [
   'Almost there',
 ]
 
+function formatRecoveryCode(code: string): string {
+  const raw = code.replace(/[^A-Za-z0-9]/g, '').toUpperCase()
+  if (raw.length !== 8) return code
+  return `${raw.slice(0, 4)}-${raw.slice(4)}`
+}
+
 function jokeLine(item: DirectionChoice): string {
   const english = item.english_prompt.trim()
   if (english) return english
@@ -61,7 +67,14 @@ export function Generator(): React.ReactElement {
   const [originalPrompt, setOriginalPrompt] = useState('')
   const [iterateText, setIterateText] = useState('')
   const [iterateHistory, setIterateHistory] = useState<{ text: string }[]>([])
+  const [recoveryCode, setRecoveryCode] = useState<string | null>(null)
+  const [restoreInput, setRestoreInput] = useState('')
+  const [restoreNote, setRestoreNote] = useState<string | null>(null)
+  const [restoreBusy, setRestoreBusy] = useState(false)
+  const [copied, setCopied] = useState(false)
+  const [pinRecovery, setPinRecovery] = useState(false)
   const previewRef = useRef<string | null>(null)
+  const recoveryRef = useRef<HTMLDivElement>(null)
   const resultRef = useRef<HTMLDivElement>(null)
   const fileRef = useRef<File | null>(null)
   const analyzeAbortRef = useRef<AbortController | null>(null)
@@ -78,7 +91,10 @@ export function Generator(): React.ReactElement {
     void (async () => {
       const res = await fetch('/api/quota')
       const json = await res.json().catch(() => null)
-      if (json?.ok && json.data) setQuota(json.data as QuotaSnapshot)
+      if (json?.ok && json.data) {
+        setQuota(json.data as QuotaSnapshot)
+        setRecoveryCode(typeof json.recoveryCode === 'string' ? json.recoveryCode : null)
+      }
     })()
   }, [])
 
@@ -97,6 +113,9 @@ export function Generator(): React.ReactElement {
       const json = await res.json().catch(() => null)
       if (json?.ok && json.data) {
         setQuota(json.data as QuotaSnapshot)
+        const code = typeof json.recoveryCode === 'string' ? json.recoveryCode : null
+        setRecoveryCode(code)
+        if (code) setPinRecovery(true)
         setPaywall(false)
         setError(null)
         track('credits_granted', { source: 'paypal' })
@@ -116,12 +135,19 @@ export function Generator(): React.ReactElement {
         const json = await res.json().catch(() => null)
         if (json?.ok && json.data) {
           setQuota(json.data as QuotaSnapshot)
+          setRecoveryCode(typeof json.recoveryCode === 'string' ? json.recoveryCode : null)
           setPaywall(false)
         }
       }
       window.history.replaceState({}, '', `${window.location.pathname}#generator`)
     })()
   }, [])
+
+  useEffect(() => {
+    if (!pinRecovery || !recoveryCode) return
+    recoveryRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    setPinRecovery(false)
+  }, [pinRecovery, recoveryCode])
 
   useEffect(() => {
     function onPick(event: Event): void {
@@ -467,6 +493,49 @@ export function Generator(): React.ReactElement {
     }
   }
 
+  async function copyRecoveryCode(): Promise<void> {
+    if (!recoveryCode) return
+    try {
+      await navigator.clipboard.writeText(formatRecoveryCode(recoveryCode))
+      setCopied(true)
+      window.setTimeout(() => setCopied(false), 2000)
+    } catch {
+      setCopied(false)
+    }
+  }
+
+  async function restoreGenerations(): Promise<void> {
+    const code = restoreInput.trim()
+    if (!code || restoreBusy) return
+    setRestoreBusy(true)
+    setRestoreNote(null)
+    try {
+      const res = await fetch('/api/credits/restore', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code }),
+      })
+      const json = await res.json().catch(() => null)
+      if (!res.ok || !json?.ok) {
+        throw new Error(json?.error?.message ?? 'Could not restore generations.')
+      }
+      setQuota(json.data as QuotaSnapshot)
+      const nextCode = typeof json.recoveryCode === 'string' ? json.recoveryCode : null
+      setRecoveryCode(nextCode)
+      if (nextCode) setPinRecovery(true)
+      setRestoreInput('')
+      setRestoreNote(
+        json.alreadyHere
+          ? 'These generations are already on this browser.'
+          : 'Restored. Your remaining generations are on this browser. Save the code below.',
+      )
+    } catch (e) {
+      setRestoreNote(e instanceof Error ? e.message : 'Could not restore generations.')
+    } finally {
+      setRestoreBusy(false)
+    }
+  }
+
   async function unlockHd(): Promise<void> {
     track('unlock_hd_clicked')
     if (paidCredits < 1) {
@@ -635,8 +704,10 @@ export function Generator(): React.ReactElement {
                 )}
               </div>
               <p className="text-xs text-muted-foreground">
-                Payments are handled by PayPal. Unused generations are
-                refundable within 14 days — see the{' '}
+                No account to create — you pay and download on this browser. After PayPal confirms
+                payment, write down the restore code shown here, or the transaction ID in your PayPal
+                receipt. Either one brings unused generations to another computer. Payments are handled
+                by PayPal. Unused generations are refundable within 14 days — see the{' '}
                 <Link href="/refund" className="font-medium text-primary underline-offset-2 hover:underline">
                   refund policy
                 </Link>
@@ -644,6 +715,27 @@ export function Generator(): React.ReactElement {
               </p>
             </div>
           )}
+
+          {recoveryCode && paidCredits > 0 ? (
+            <div
+              ref={recoveryRef}
+              id="restore-code"
+              className="rounded-2xl border border-primary/30 bg-paper p-4"
+            >
+              <p className="text-sm font-bold">Save this restore code</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                There is no login to look this up later. Write the code down, and keep the transaction ID
+                in your PayPal receipt. On another computer, enter either one to bring over the generations
+                you have not used yet.
+              </p>
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                <p className="font-mono text-lg font-bold tracking-widest">{formatRecoveryCode(recoveryCode)}</p>
+                <button type="button" onClick={() => void copyRecoveryCode()} className="btn-secondary">
+                  {copied ? 'Copied' : 'Copy'}
+                </button>
+              </div>
+            </div>
+          ) : null}
 
           {showJokeBox ? (
             <div className="flex flex-col gap-2.5">
@@ -677,6 +769,43 @@ export function Generator(): React.ReactElement {
               ? ` · ${paidCredits} HD generation${paidCredits === 1 ? '' : 's'} left${generationsNeverExpire ? ' · never expire' : ttlLabel ? ` · valid ${ttlLabel}` : ''}`
               : ''}
           </p>
+
+          <div className="rounded-2xl border border-border bg-paper px-4 py-3 text-sm">
+            <p className="font-bold">No account needed</p>
+            <p className="mt-1 leading-relaxed text-muted-foreground">
+              You can pay and download without signing up. Generations stay on this browser, so save the
+              restore code shown after checkout, or the transaction ID in your PayPal receipt. On another
+              computer, enter either one below.
+            </p>
+          </div>
+
+          <form
+            className="space-y-2"
+            onSubmit={(event) => {
+              event.preventDefault()
+              void restoreGenerations()
+            }}
+          >
+            <label htmlFor="restore-code-input" className="block text-sm font-medium">
+              Already paid on another computer?
+            </label>
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <input
+                id="restore-code-input"
+                type="text"
+                value={restoreInput}
+                autoComplete="off"
+                spellCheck={false}
+                onChange={(event) => setRestoreInput(event.target.value)}
+                placeholder="Restore code or PayPal transaction ID"
+                className="input-base"
+              />
+              <button type="submit" disabled={restoreBusy || !restoreInput.trim()} className="btn-secondary">
+                {restoreBusy ? 'Restoring…' : 'Restore'}
+              </button>
+            </div>
+            {restoreNote ? <p className="text-sm text-muted-foreground">{restoreNote}</p> : null}
+          </form>
         </div>
       </div>
     </div>

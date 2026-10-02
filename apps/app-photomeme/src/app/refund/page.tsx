@@ -27,7 +27,7 @@ export default function RefundPage(): React.ReactElement {
   return (
     <article className="prose-app mx-auto max-w-2xl px-4 py-12 sm:px-6">
       <h1 className="font-display text-3xl font-bold tracking-tight">Refund Policy</h1>
-      <p className="mt-2 text-sm text-muted-foreground">Last updated: September 2026</p>
+      <p className="mt-2 text-sm text-muted-foreground">Last updated: October 2026</p>
 
       <h2>The short version</h2>
       <p>
@@ -83,6 +83,13 @@ export default function RefundPage(): React.ReactElement {
           lapse.
         </p>
       )}
+
+      <h2>Another computer</h2>
+      <p>
+        Generations stay with the browser that paid. After checkout, save the restore code shown on
+        the page. On another computer, enter that code — or the PayPal transaction ID from your
+        receipt — and the generations you have not used yet move to the browser you are using now.
+      </p>
 
       <h2>How to request a refund</h2>
       <p>
