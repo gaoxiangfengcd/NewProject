@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { Suspense } from 'react'
 import { Fraunces, Plus_Jakarta_Sans } from 'next/font/google'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -7,6 +8,7 @@ import { ExploreMenu } from '@/components/ExploreMenu'
 import { JsonLd } from '@/components/JsonLd'
 import { CONTACT_EMAIL, RETENTION_DAYS, SITE_DESCRIPTION, SITE_NAME, SITE_URL } from '@/lib/site'
 import { organizationJsonLd, webAppJsonLd, websiteJsonLd } from '@/lib/seo/metadata'
+import { GoogleAnalytics } from '@/components/GoogleAnalytics'
 import { VisitTracker } from '@/components/VisitTracker'
 import { SEO_PAGES } from '@/lib/seo/pages'
 
@@ -142,6 +144,9 @@ export default function RootLayout({
         </footer>
 
         <VisitTracker />
+        <Suspense fallback={null}>
+          <GoogleAnalytics />
+        </Suspense>
         <JsonLd data={[organizationJsonLd(), websiteJsonLd(), webAppJsonLd()]} />
       </body>
     </html>

@@ -11,7 +11,7 @@ export default function PrivacyPage(): React.ReactElement {
   return (
     <article className="prose-app mx-auto max-w-2xl px-4 py-12 sm:px-6">
       <h1 className="font-display text-3xl font-bold tracking-tight">Privacy Policy</h1>
-      <p className="mt-2 text-sm text-muted-foreground">Last updated: September 2026</p>
+      <p className="mt-2 text-sm text-muted-foreground">Last updated: October 2026</p>
 
       <h2>The short version</h2>
       <p>
@@ -45,7 +45,20 @@ export default function PrivacyPage(): React.ReactElement {
         We collect anonymous product events, such as which page you opened, the site that linked
         here, and which buttons or links you clicked. Campaign tags in the address (utm_source and
         similar) are stored the same way. These logs do not identify you personally and are not
-        sold. We do not use third-party advertising cookies.
+        sold. We do not use them for advertising.
+      </p>
+      <p>
+        We also use Google Analytics to see which countries and links bring visitors. Google
+        receives the page address, the referring site, and a rough location. It does not receive
+        your photos. You can opt out with the{' '}
+        <a
+          href="https://tools.google.com/dlpage/gaoptout"
+          className="font-medium text-primary"
+          rel="noopener noreferrer"
+        >
+          Google Analytics Opt-out Browser Add-on
+        </a>
+        .
       </p>
 
       <h2>Payments</h2>
@@ -58,7 +71,8 @@ export default function PrivacyPage(): React.ReactElement {
       <h2>Cookies</h2>
       <p>
         We set a small essential cookie so your free/paid generation quota and HD credits stay on
-        this browser. No advertising or third-party tracking cookies.
+        this browser. Google Analytics may also set its own cookie to tell new visits from return
+        visits. We do not use advertising cookies.
       </p>
 
       <h2>Contact</h2>
