@@ -60,6 +60,19 @@ export default function PrivacyPage(): React.ReactElement {
         </a>
         .
       </p>
+      <p>
+        We use Microsoft Clarity to see how people move through the page — heatmaps and short
+        session recordings. Clarity receives clicks, scrolls, and a rough location. It does not
+        receive your photos. You can opt out with the{' '}
+        <a
+          href="https://go.microsoft.com/fwlink/?LinkId=521839"
+          className="font-medium text-primary"
+          rel="noopener noreferrer"
+        >
+          Microsoft opt-out
+        </a>
+        .
+      </p>
 
       <h2>Payments</h2>
       <p>
@@ -71,8 +84,8 @@ export default function PrivacyPage(): React.ReactElement {
       <h2>Cookies</h2>
       <p>
         We set a small essential cookie so your free/paid generation quota and HD credits stay on
-        this browser. Google Analytics may also set its own cookie to tell new visits from return
-        visits. We do not use advertising cookies.
+        this browser. Google Analytics and Microsoft Clarity may also set their own cookies to tell
+        new visits from return visits. We do not use advertising cookies.
       </p>
 
       <h2>Contact</h2>

@@ -9,8 +9,12 @@ import { JsonLd } from '@/components/JsonLd'
 import { CONTACT_EMAIL, RETENTION_DAYS, SITE_DESCRIPTION, SITE_NAME, SITE_URL } from '@/lib/site'
 import { organizationJsonLd, webAppJsonLd, websiteJsonLd } from '@/lib/seo/metadata'
 import { GoogleAnalytics } from '@/components/GoogleAnalytics'
+import { MicrosoftClarity } from '@/components/MicrosoftClarity'
 import { VisitTracker } from '@/components/VisitTracker'
 import { SEO_PAGES } from '@/lib/seo/pages'
+
+const BING_VERIFICATION =
+  (process.env.NEXT_PUBLIC_BING_SITE_VERIFICATION ?? '').trim() || 'B2EC531778249A7C81DCEC65634D5723'
 
 const jakarta = Plus_Jakarta_Sans({ subsets: ['latin'], variable: '--font-sans' })
 const fraunces = Fraunces({
@@ -50,6 +54,9 @@ export const metadata: Metadata = {
     images: ['/examples/after.webp'],
   },
   robots: { index: true, follow: true },
+  ...(BING_VERIFICATION
+    ? { verification: { other: { 'msvalidate.01': BING_VERIFICATION } } }
+    : {}),
 }
 
 export default function RootLayout({
@@ -146,6 +153,7 @@ export default function RootLayout({
         <VisitTracker />
         <Suspense fallback={null}>
           <GoogleAnalytics />
+          <MicrosoftClarity />
         </Suspense>
         <JsonLd data={[organizationJsonLd(), websiteJsonLd(), webAppJsonLd()]} />
       </body>
