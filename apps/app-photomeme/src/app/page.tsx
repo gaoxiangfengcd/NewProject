@@ -1,11 +1,10 @@
 import type { Metadata } from 'next'
 import { Generator } from '@/components/Generator'
-import { ExampleBeforeAfter } from '@/components/ExampleBeforeAfter'
+import { Hero } from '@/components/Hero'
 import { Faq } from '@/components/Faq'
 import { GiftSeoNav } from '@/components/GiftSeoNav'
 import { SITE_NAME } from '@/lib/site'
-import { homeMetadata, HOME_SEO } from '@/lib/seo/metadata'
-import Image from 'next/image'
+import { homeMetadata } from '@/lib/seo/metadata'
 
 export const metadata: Metadata = homeMetadata()
 
@@ -34,34 +33,7 @@ const HOME_FAQS = [
 export default function HomePage(): React.ReactElement {
   return (
     <div>
-      <section className="mx-auto max-w-3xl px-4 pb-6 pt-8 text-center sm:px-6 sm:pb-8 sm:pt-10">
-        <Image
-          src="/logo.webp"
-          alt={`${SITE_NAME} — funny personalized digital gifts from photos`}
-          width={720}
-          height={730}
-          priority
-          className="mx-auto h-auto w-[min(100%,22rem)] sm:w-[26rem]"
-        />
-        <h1 className="mt-6 font-display text-[2.1rem] font-bold leading-[1.15] tracking-tight sm:mt-8 sm:text-[2.75rem]">
-          {HOME_SEO.h1}
-        </h1>
-        <p className="mx-auto mt-4 max-w-md text-sm leading-relaxed text-muted-foreground sm:text-base">
-          {HOME_SEO.support}
-        </p>
-        <div className="mt-6 flex flex-col items-center justify-center gap-2.5 sm:flex-row">
-          <a href="#generator" className="btn-primary">
-            Make a Gift
-          </a>
-          <a href="#examples" className="btn-secondary">
-            Explore Examples
-          </a>
-        </div>
-      </section>
-
-      <section id="examples" className="mx-auto max-w-4xl scroll-mt-20 px-4 pb-8 sm:px-6">
-        <ExampleBeforeAfter />
-      </section>
+      <Hero />
 
       <section id="generator" className="mx-auto max-w-4xl scroll-mt-20 px-4 pb-10 sm:px-6">
         <Generator />

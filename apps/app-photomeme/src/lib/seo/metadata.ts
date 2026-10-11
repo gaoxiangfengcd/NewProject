@@ -6,9 +6,9 @@ export const HOME_SEO = {
   title: `Funny Personalized Digital Gifts From Photos | ${SITE_NAME}`,
   description:
     'Turn a photo of a friend, partner, or family member into a funny personalized digital gift. MeMeGo finds what makes them unique and exaggerates it into something unforgettable.',
-  h1: "Turn a Photo Into a Gift They'll Actually Laugh At",
+  h1: "Turn a friend's photo into a funny gift in 30 seconds",
   support:
-    'Upload a photo. MeMeGo draws a cartoon character from it — a gift to send, not a change to their real face.',
+    'Drop in a photo you already have. They get a cartoon they can laugh at and send today — not a filter, not a face swap. The first preview is free.',
 } as const
 
 const OG_IMAGE = {
