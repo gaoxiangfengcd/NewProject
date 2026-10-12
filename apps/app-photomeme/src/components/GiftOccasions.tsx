@@ -51,9 +51,10 @@ const OCCASIONS = [
   },
 ] as const
 
-export function GiftOccasions(): React.ReactElement {
+export function GiftOccasions({ heading = true }: { heading?: boolean } = {}): React.ReactElement {
   return (
     <div>
+      {heading ? (
       <div className="text-center">
         <span className="eyebrow">Who it&apos;s for</span>
         <h2 className="mt-2 font-display text-2xl font-bold tracking-tight">
@@ -65,8 +66,9 @@ export function GiftOccasions(): React.ReactElement {
           exactly who you are&rdquo; — and it makes them laugh first.
         </p>
       </div>
+      ) : null}
 
-      <div className="mt-7 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      <div className={`${heading ? 'mt-7' : ''} grid gap-3 sm:grid-cols-2 lg:grid-cols-3`}>
         {OCCASIONS.map((item) => (
           <Link
             key={item.title}

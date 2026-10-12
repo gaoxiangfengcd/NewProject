@@ -62,11 +62,11 @@ export function effectiveUserDirection(
 }
 
 export const MEMEGO_PENCIL_STYLE =
-  'black-and-white hand-drawn caricature, graphite pencil and black ink, expressive contour lines, dense cross-hatching, visible pencil texture, lively imperfect strokes, editorial cartoon energy, strong wide-angle/fisheye perspective, deliberately exaggerated head and facial proportions for the selected joke, recognizable likeness, warm playful humor, original drawing rather than a photo filter'
+  'funny colored-pencil caricature, saturated colors from the original photo, clear comic contours, dense cross-hatching, the real expressions and features pushed until the joke is obvious, not a generic cute Pixar face, editorial cartoon energy rather than a realistic portrait sketch, recognizable likeness, warm playful humor, original drawing rather than a photo filter'
 
-/** 参考效果要求：黑白手绘漫画，而不是彩色滤镜。 */
+/** 参考效果要求：彩色手绘漫画，而不是黑白石墨或照片滤镜。 */
 export const MEMEGO_COLOR_RULES =
-  'HARD MONOCHROME: finished image is black-and-white pencil and ink with graphite values and cross-hatching. No color wash, no painted color, no photorealistic color grade.'
+  'HARD COLOR: finished image is a saturated colored-pencil cartoon caricature with dense strokes. Keep the photo’s colors. No realistic portrait sketch, no graphite monochrome, no photorealistic color grade, no empty outline drawing.'
 
 /** 礼物底线：好笑，但不许变老、变丑、往身体里塞东西。 */
 export const MEMEGO_KINDNESS_RULES = [
@@ -735,10 +735,10 @@ export const FLUX_EXAGGERATION_RULES = [
 ].join('\n')
 
 export const FLUX_STYLE_ANCHOR =
-  'STYLE LOCK: black and white pencil caricature only. Dense hand-drawn cross-hatching, scratchy uneven strokes, comic contrast, visible paper grain. NOT a smooth digital portrait, NOT photorealistic, NOT a soft illustration, NOT a photo filter. It must look like a satirical pencil caricature drawn as a gift.'
+  'STYLE LOCK: colored-pencil caricature only. Saturated color, dense hand-drawn strokes and cross-hatching, scratchy uneven lines, visible paper grain. NOT graphite monochrome, NOT a smooth digital portrait, NOT photorealistic, NOT a photo filter. It must look like a satirical colored-pencil caricature drawn as a gift.'
 
 export const PENCIL_CARICATURE_STYLE =
-  'STYLE: black and white satirical pencil caricature. Scratchy loose linework, heavy cross-hatching in shadows, uneven line weight, paper texture. Comic, not pretty. NOT smooth digital shading, NOT a realistic portrait sketch, NOT flat coloring.'
+  'STYLE: saturated colored-pencil caricature. Dense scratchy linework, heavy cross-hatching in shadows, uneven line weight, paper texture, colors from the original photo. Comic, not pretty. NOT graphite black-and-white, NOT smooth digital shading, NOT a realistic portrait, NOT an empty outline.'
 
 const CONTACT_KEYS = new Set(['wall', 'chair', 'car', 'held_object', 'table'])
 
@@ -796,7 +796,7 @@ export function buildMemegoPrompt(opts: {
   })
 
   const core = [
-    `REDRAW the uploaded photo as a funny black-and-white pencil caricature of ${peopleCount} people.`,
+    `REDRAW the uploaded photo as a funny saturated colored-pencil caricature of ${peopleCount} people.`,
     'Use the photo only for identity, clothing, and scene. Do not trace the photo. Do not make a realistic portrait.',
     'The visual joke must be obvious in one second.',
     '',

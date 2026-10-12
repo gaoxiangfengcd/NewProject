@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { ExampleGallery } from '@/components/ExampleGallery'
 import { Generator } from '@/components/Generator'
 import { Hero } from '@/components/Hero'
 import { Faq } from '@/components/Faq'
@@ -34,6 +35,8 @@ export default function HomePage(): React.ReactElement {
   return (
     <div>
       <Hero />
+
+      <ExampleGallery />
 
       <section id="generator" className="mx-auto max-w-4xl scroll-mt-20 px-4 pb-10 sm:px-6">
         <Generator />

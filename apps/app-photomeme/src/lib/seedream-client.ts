@@ -125,7 +125,7 @@ function arkGenerateBody(model: string, prompt: string, images: string[]): strin
     `{"model":${JSON.stringify(model)},` +
     `"prompt":${JSON.stringify(prompt)},` +
     `"size":"2K",` +
-    `"response_format":"url",` +
+    `"response_format":"b64_json",` +
     `"watermark":false`
   if (!images.length) return `${base}}`
   const imageField =
@@ -304,7 +304,7 @@ async function postJson(
     method: 'POST',
     headers: volcHeaders(config, url, body),
     body,
-    signal: AbortSignal.timeout(60_000),
+    signal: AbortSignal.timeout(90_000),
   })
   const text = await res.text().catch(() => '')
   let json: unknown = text
@@ -400,7 +400,10 @@ export async function generateSeedreamImage(opts: {
       return { ok: false, error: { code: 'SEEDREAM_FAILED', details: { message } } }
     }
     const imageUrl = extractUrl(posted.json)
-    if (imageUrl) return { ok: true, url: imageUrl, model: config.model }
+    if (imageUrl) {
+      console.log('[seedream] result kind:', imageUrl.startsWith('data:') ? 'b64' : 'url')
+      return { ok: true, url: imageUrl, model: config.model }
+    }
     const taskId = extractTaskId(posted.json)
     if (taskId) {
       const remaining = POLL_LIMIT_MS - (Date.now() - started)

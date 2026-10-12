@@ -72,14 +72,14 @@ export async function checkGeneratedImage(
 
   const prompt = [
     'Look at this generated caricature. Answer three yes/no questions:',
-    '1. Is the image grayscale (black and white only, no color)?',
+    '1. Is the image in color (not grayscale graphite)?',
     '2. If there are 2+ people in the original photo, are BOTH people visibly distorted?',
     '3. Are the head and neck clearly distorted (bigger head, longer neck)?',
     '',
     'Original photo analysis (for people count and who should be exaggerated):',
     JSON.stringify(originalAnalysis),
     '',
-    'Output JSON: { "grayscale": true/false, "all_people_distorted": true/false, "structural_distortion": true/false, "feedback": "one short sentence" }',
+    'Output JSON: { "in_color": true/false, "all_people_distorted": true/false, "structural_distortion": true/false, "feedback": "one short sentence" }',
   ].join('\n')
   console.log('[self-check] prompt sent to Qwen:', prompt)
 
@@ -145,15 +145,15 @@ export async function checkGeneratedImage(
       return result
     }
 
-    const grayscale = asBool(parsed.grayscale, true)
+    const inColor = asBool(parsed.in_color, true)
     const allPeople = asBool(parsed.all_people_distorted, true)
     const structural = asBool(parsed.structural_distortion, true)
     const feedback =
       typeof parsed.feedback === 'string' ? parsed.feedback.replace(/\s+/g, ' ').trim().slice(0, 220) : ''
-    const pass = grayscale && allPeople && structural
+    const pass = inColor && allPeople && structural
     if (!pass) {
       logger.warn('self-check failed', {
-        grayscale,
+        in_color: inColor,
         all_people_distorted: allPeople,
         structural_distortion: structural,
         feedback,
@@ -161,7 +161,7 @@ export async function checkGeneratedImage(
     }
     const result = pass
       ? { pass: true }
-      : { pass: false, feedback: feedback || 'Push grayscale, distort every person, and exaggerate body structure not just expression.' }
+      : { pass: false, feedback: feedback || 'Keep saturated color, distort every person, and exaggerate body structure not just expression.' }
     console.log('[self-check] verdict:', JSON.stringify(result))
     return result
   } catch (e) {

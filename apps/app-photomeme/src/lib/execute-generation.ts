@@ -1,17 +1,65 @@
+import { setDefaultResultOrder } from 'node:dns'
 import sharp from 'sharp'
 import type { PhotoBriefAnalysis } from '@/lib/reasoning-engine'
 import { generateSeedreamImage } from '@/lib/seedream-client'
 
+try {
+  setDefaultResultOrder('ipv4first')
+} catch {
+  // Node without this API — ignore.
+}
+
 const SEEDREAM_MAX_EDGE = 768
+const DOWNLOAD_ATTEMPTS = 3
+const DOWNLOAD_TIMEOUT_MS = 45_000
 
 async function fetchAsBuffer(url: string): Promise<Buffer> {
   if (url.startsWith('data:')) {
     const base64 = url.slice(url.indexOf(',') + 1)
     return Buffer.from(base64, 'base64')
   }
-  const res = await fetch(url, { signal: AbortSignal.timeout(30_000) })
-  if (!res.ok) throw new Error(`RESULT_FETCH_FAILED:${res.status}`)
-  return Buffer.from(await res.arrayBuffer())
+
+  let host = 'unknown'
+  try {
+    host = new URL(url).host
+  } catch {
+    host = 'invalid-url'
+  }
+
+  let lastError: unknown
+  for (let attempt = 1; attempt <= DOWNLOAD_ATTEMPTS; attempt++) {
+    const started = Date.now()
+    try {
+      console.log('[seedream] downloading result', { host, attempt })
+      const res = await fetch(url, {
+        redirect: 'follow',
+        headers: { 'User-Agent': 'MeMeGo/1.0' },
+        signal: AbortSignal.timeout(DOWNLOAD_TIMEOUT_MS),
+      })
+      if (!res.ok) throw new Error(`RESULT_FETCH_FAILED:${res.status}`)
+      const buf = Buffer.from(await res.arrayBuffer())
+      console.log('[seedream] downloaded result', {
+        host,
+        bytes: buf.length,
+        ms: Date.now() - started,
+        attempt,
+      })
+      if (buf.length < 500) throw new Error('RESULT_FETCH_FAILED:empty')
+      return buf
+    } catch (error) {
+      lastError = error
+      console.warn('[seedream] download attempt failed', {
+        host,
+        attempt,
+        ms: Date.now() - started,
+        message: error instanceof Error ? error.message : String(error),
+      })
+      if (attempt < DOWNLOAD_ATTEMPTS) {
+        await new Promise((resolve) => setTimeout(resolve, 700 * attempt))
+      }
+    }
+  }
+  throw lastError instanceof Error ? lastError : new Error('RESULT_FETCH_FAILED')
 }
 
 async function shrinkInputImage(image: string): Promise<string> {
@@ -62,7 +110,7 @@ export async function executeT2I(opts: {
   }
 
   try {
-    let outputBuffer = await fetchAsBuffer(result.url)
+    const outputBuffer = await fetchAsBuffer(result.url)
     console.log('[seedream] image size:', outputBuffer.length)
     console.log('[route] ---- generation done ----')
     return { ok: true, buffer: outputBuffer, provider, model: result.model, prompt }

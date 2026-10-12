@@ -246,6 +246,33 @@
   }
 }
 
+/* 样图墙走马灯：两份相同内容并排，位移 50% 无缝循环 */
+@keyframes example-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.example-marquee {
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 4%, #000 96%, transparent);
+  mask-image: linear-gradient(to right, transparent, #000 4%, #000 96%, transparent);
+}
+
+.example-marquee-track {
+  display: flex;
+  width: max-content;
+  animation: example-marquee 52s linear infinite;
+}
+
+.example-marquee:hover .example-marquee-track,
+.example-marquee:focus-within .example-marquee-track {
+  animation-play-state: paused;
+}
+
 /* 尊重系统"减少动效"设置 */
 @media (prefers-reduced-motion: reduce) {
   *,

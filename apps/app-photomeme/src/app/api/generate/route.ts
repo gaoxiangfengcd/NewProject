@@ -27,7 +27,7 @@ import {
 } from '@/lib/share'
 
 export const runtime = 'nodejs'
-export const maxDuration = 90
+export const maxDuration = 120
 
 function jsonError(
   status: number,

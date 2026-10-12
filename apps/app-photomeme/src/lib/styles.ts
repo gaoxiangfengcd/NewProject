@@ -37,7 +37,7 @@ export const EXAGGERATION_STYLES: ExaggerationStyle[] = [
     scenePrompt:
       'turn the uploaded photo into an unexpected hand-drawn caricature built around the single funniest visible feature, keeping the original scene as the stage for the joke',
     stylePrompt:
-      'black-and-white hand-drawn pencil and ink caricature, expressive graphite and pen lines, dense cross-hatching, visible sketch texture, slightly rough handmade contours, editorial cartoon drawing, strong wide-angle and fisheye perspective, exaggerated head and facial proportions where useful, playful visual distortion, high detail, funny rather than cruel, the kind of drawing that makes the viewer laugh before they understand why',
+      'funny colored-pencil caricature, saturated colors from the original photo, dense visible pencil strokes, clear comic contours, the joke feature pushed until it is funny at a glance, keep each real expression instead of a generic cute face, editorial cartoon not a Pixar portrait, not a realistic sketch, funny rather than cruel, not graphite monochrome, not a photoreal filter',
     // Strong enough to allow actual redraw/caricature instead of a light filter.
     strength: 0.88,
     houseStyle: true,

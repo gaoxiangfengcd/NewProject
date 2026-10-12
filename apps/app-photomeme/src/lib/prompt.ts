@@ -21,9 +21,9 @@ function jimengStyleWrapper(sceneBody: string, report?: PhotoScoreReport | null)
   void report
   return [
     sceneBody,
-    '上面这句是梗。梗里点名的五官或物件必须比照片大一倍，第一眼就能看出来。',
-    '黑白石墨铅笔肖像漫画。只画照片里的人，有几张清晰的脸就画几个人。',
-    '轮廓要清楚，脸上不要密排线。人要年轻、可爱、漂亮。禁止再贴一张别人的大脸。',
+    '上面这句是梗。梗里点到的人和物件都要画大，点了几个就夸张几个，力度相当，不要只改其中一个。还留在原来的位置，第一眼就要好笑。',
+    '彩色铅笔漫画，要趣味，不要可爱插画，不要皮克斯，不要迪士尼，不要所有人同一张大眼睛卡通脸。保留原来的表情和姿势，只把已有特征夸张到能笑。轮廓清楚，颜色饱和，笔触又密又多。只画照片里已有的人或动物。',
+    '人要年轻、好看、还是本人。手脚爪子数量必须和照片一致，有几条腿就画几条，禁止多画腿。不要空轮廓，不要写实素描，不要黑白石墨，不要写实照片滤镜。禁止再贴一张别人的大脸。禁止添加放大镜、望远镜、相框、贴纸或任何照片里没有的新道具。',
   ]
     .filter(Boolean)
     .join('')
@@ -35,7 +35,7 @@ function buildShortSeedreamPrompt(
 ): string {
   void report
   const scene = directionJoke.replace(/\s+/g, ' ').trim()
-  if (!scene) return jimengStyleWrapper('把照片里最显眼的表情或物件放大一倍。')
+  if (!scene) return jimengStyleWrapper('把照片里最显眼的表情或已有物件画得更大。')
   if (/[\u4e00-\u9fff]/.test(scene)) return jimengStyleWrapper(scene)
   return jimengStyleWrapper(`梗：${scene}。`)
 }
@@ -107,6 +107,6 @@ export function buildIteratePrompt(
   const notes = [...history, newFeedback].map((item) => item.trim()).filter(Boolean)
   return [
     originalPrompt.trim(),
-    `再改一版：${notes.join('；')}。把已有的笑话点再画大两三倍，一眼能笑。不要普通素描，不要新物体。`,
+    `再改一版：${notes.join('；')}。把已有的笑话点再画大两三倍，一眼能笑。要趣味漫画，不要可爱插画，不要皮克斯脸。手脚爪子数量必须和照片一致，禁止多画腿。修改里点到的人和物件都要同样夸张，点了几个就改几个，不要只改其中一个。颜色要饱和，笔触要密，不要黑白，不要放大镜，不要新物体。`,
   ].join('')
 }

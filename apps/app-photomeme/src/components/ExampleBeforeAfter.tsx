@@ -18,7 +18,8 @@ export function ExampleBeforeAfter({
           Same photo. Then the <span className="text-gradient">gift</span>.
         </h2>
         <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
-          This is the cartoon character you get — drawn from their photo, not a change to their real face.
+          This is the cartoon you get — drawn from their photo. A couple here; it works the same for
+          a parent, a friend, or the whole family.
         </p>
       </div>
 

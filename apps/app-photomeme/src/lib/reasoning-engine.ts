@@ -160,14 +160,41 @@ export class ReasoningError extends Error {
   }
 }
 
+function isHouseStyleEnglish(sentence: string): boolean {
+  const s = sentence.trim().toLowerCase()
+  if (!s) return true
+  if (/young,\s*cute,\s*and pretty/.test(s)) return true
+  if (/keep them young/.test(s)) return true
+  if (/look young and cute/.test(s)) return true
+  if (/good-looking/.test(s) && /^keep\b/.test(s)) return true
+  if (/^keep\b/.test(s) && /(scene|background|clothing|setting|original)/.test(s)) return true
+  if (/do not add another person/.test(s)) return true
+  if (/colored-pencil/.test(s)) return true
+  if (/do not (?:age|wrinkle)/.test(s)) return true
+  return false
+}
+
+function stripHouseStyleEnglish(text: string): string {
+  const clauses = text
+    .replace(/,?\s*keep them young(?: and cute)?\.?/gi, '')
+    .replace(/,?\s*keep both people good-looking\.?/gi, '')
+    .replace(/,?\s*both should look young, cute, and pretty\.?/gi, '')
+  const parts = clauses
+    .split(/(?<=[.!?])\s+/)
+    .map((part) => part.trim())
+    .filter((part) => part && !isHouseStyleEnglish(part))
+  return parts.join(' ').replace(/\s+/g, ' ').trim()
+}
+
 function asDirection(raw: unknown, index: number): CreativeDirection | null {
   if (!raw || typeof raw !== 'object') return null
   const o = raw as Record<string, unknown>
   const title = typeof o.title === 'string' ? o.title.replace(/\s+/g, ' ').trim() : ''
   const description =
     typeof o.description === 'string' ? o.description.replace(/\s+/g, ' ').trim() : ''
-  const english =
-    typeof o.english_prompt === 'string' ? o.english_prompt.replace(/\s+/g, ' ').trim() : ''
+  const english = stripHouseStyleEnglish(
+    typeof o.english_prompt === 'string' ? o.english_prompt.replace(/\s+/g, ' ').trim() : '',
+  )
   const focus = typeof o.focus === 'string' ? o.focus.replace(/\s+/g, ' ').trim() : ''
   const layerSource =
     typeof o.layer_source === 'string' ? o.layer_source.replace(/\s+/g, ' ').trim() : ''
@@ -343,8 +370,8 @@ STEP 3 — PRIORITY ORDER (highest first):
 2. Action (hand behind ear, hand on cheek, pointing, leaning)
 3. Pose (head tilt, body lean, chin up)
 4. Relationship (who is looking at whom, who is reacting to whom)
-5. Clothing or accessory (hat, glasses, scarf, jacket)
-6. Environment (boat, window, sky)
+5. Clothing or accessory already in the photo
+6. Environment — the actual place in the photo
 
 Never make clothing or environment the dominant subject if a higher-priority feature is present.
 
@@ -356,55 +383,62 @@ ACCURACY FIRST — do not upgrade what you see:
 - A hand by the ear is not 托腮. Name the real gesture.
 - Count a person only when their face is visible. A sliver of clothing or color at the edge is not a second person. Never invent a companion.
 - Then push that REAL feature on the same person: a slightly bigger head still attached to their body. Never add a second face, a floating head, a portrait inset, or an extra person.
+- Whoever and whatever the joke names, exaggerate all of them equally. Do not pick a single hero and leave the others as a straight portrait.
 
-The joke is that real feature pushed bigger. Bad: "巨笑牙齿全露" when the photo is a closed smile. Bad: adding a woman because the style example is a couple. Good: "他把已有的微笑、帽子和眼镜推大，还是这一个人".
+The joke is that real feature pushed bigger. Bad: upgrading a mild smile into 巨笑牙齿全露. Bad: inventing a person who is not in the photo. Bad: naming two people then only exaggerating one. Good: name only what is visible, then push those same things bigger.
 Every direction must include the people whose faces are actually visible:
 - One visible face means one person. Do not write 另一个人, 旁边的人, or a relationship.
 - Two or more visible faces means all of them, each with their own expression.
 - Key clothing/accessories (hat, glasses, scarf) that help identity
-- Keep the original setting as the stage, like the homepage After example. Do not flatten to blank paper.
+- Keep the original setting as the stage. Do not flatten to blank paper.
 
-The DIRECTION that changes is only the FOCUS — which feature is pushed to the extreme. But the rest of the scene must still be present.
+The DIRECTION that changes is only the FOCUS. If the focus is an interaction, exaggerate both people in it equally. The rest of the scene must still be present.
 
-TONE — gift caricature like 即梦, NOT a mean political cartoon:
-- Humor is affectionate, cute, and pretty. People stay young and good-looking.
-- Exaggerate the smile and eyes. Do NOT age them. Never write 皱纹, 法令纹, 抬头纹, 褶子, 变老, 显老, 丑化.
-- Pencil hatching belongs on hair, clothes, and background. Facial skin stays smooth.
+TONE — funny gift caricature, NOT a cute illustrated portrait, NOT a mean political cartoon:
+- The joke must make someone laugh at a glance. A pretty cartoon with no exaggeration is a miss.
+- Keep each person's real expression. Push that existing expression or feature until it is funny.
+- Do not turn everyone into the same big-eyed cute face.
+- People stay young and good-looking. Do NOT age them. Never write 皱纹, 法令纹, 抬头纹, 褶子, 变老, 显老, 丑化.
 - Never write 嫌弃, 丑化, 毁容, 畸形, 狰狞. Side-eye is playful, not hostile.
 - Side-eye means round open eyes with pupils flicked toward the other person. Never write 眯眼, 皱眉, 挤眼, or a glare.
-- Style target is 黑白石墨铅笔肖像漫画, the homepage After: graphite hatching, exaggerated neck and features, full original scene, people still recognizable. Not a photoreal pencil trace, not anime.
+- Style target is 彩色铅笔漫画: saturated color, dense strokes, funny exaggeration, full original scene. Not a cute Pixar family portrait, not a realistic sketch, not graphite monochrome, not anime.
 - Do not write 细节清晰 or 服饰细节保留 as a photoreal sketch instruction.
 
 Each direction's description MUST include:
 - The number of visible faces, and only those people
 - Each of those people's expression
-- At least one key clothing or accessory
-- 背景保留原场景，画成黑白石墨铅笔肖像漫画，不要改成白纸，不要画成写实素描。不要多画一个人。
+- The one existing feature to push bigger
 If a description does not include all of these, rewrite it.
+
+HOUSE STYLE IS DEFAULT — do not write it into title, description, or english_prompt:
+- Funny colored-pencil caricature, original scene, no extra people, no magnifying glass, not a cute Pixar portrait
+- The image model already applies those. The user only edits the joke.
 
 Do not write 3 alternatives. Pick the single strongest joke.
 
 Each direction must include:
 - "title": English, 2-5 words, names the joke. Shown only as a label.
-- "description": Simplified Chinese for the image model. One or two sentences. Zero English. Name the real feature already in the photo and enlarge it on that same person. People must look young, cute, and pretty. Write 脸要年轻可爱，不要画老. Never write 皱纹, 变老, 丑化, 毁容, 大头像, 另一张脸.
-- "english_prompt": English, 1-2 sentences for the user to read and edit. Same joke as description. Zero Chinese. Keep them young, cute, and pretty. Do not say ugly, old, or wrinkled.
+- "description": Simplified Chinese for the image model. One or two sentences. Zero English. Name the real feature already in the photo and enlarge it on that same person. Never write 皱纹, 变老, 丑化, 毁容, 大头像, 另一张脸, 年轻可爱, 彩色铅笔, 保留背景.
+- "english_prompt": English, ONE short sentence the user can edit. Only the joke — which existing features to push bigger. If the joke names more than one person or object, name each one. Zero Chinese. Do not write young/cute/pretty, keep the scene, keep clothing, colored pencil, or any quality instructions.
 - "based_on": the exact visible feature that is the FOCUS (in English)
 - "priority": one of "expression" / "action" / "pose" / "relationship" / "clothing" / "environment"
 - "focus": short English note of which feature is pushed to the extreme
 
 HARD RULES:
-- NO INVENTED OBJECTS: do not add balloons, phones, selfie sticks, telescopes, props, weather, or anything not in the photo.
-- Do not use metaphors that name another object (e.g. "eye mask like a balloon"). Enlarge the real item; never replace it.
+- NO INVENTED OBJECTS: do not add balloons, phones, selfie sticks, telescopes, magnifying glasses, frames, stickers, props, weather, or anything not in the photo.
+- Keep the same number of arms, legs, and paws as in the photo. Never add an extra limb.
+- If the joke enlarges something already in the photo, enlarge that same item on the same person. Do not add a new object that means "bigger".
+- Do not use metaphors that name another object. Enlarge the real item; never replace it.
 - If a direction cannot name a specific "based_on" feature from the photo, do NOT include it.
 - priority should be "expression" or "action" or "relationship" when those are visible.
 
-Good (complete scene, playful, both people):
+Good (joke only; house style is default). Invent the joke from THIS photo, not from the example:
 {
-  "title": "Bigger glasses",
-  "description": "两人戴着眼镜微笑合影。把已有的微笑和眼镜比例拉开，人要好看、还是本人，不要变老不要皱纹。吉祥物和夜景都还在，黑白石墨铅笔肖像漫画。",
-  "english_prompt": "Push the smile and glasses they already have. Keep both people good-looking. Keep the mascot and the night scene.",
-  "based_on": "man's laugh and woman's side-eye",
-  "priority": "relationship"
+  "title": "Bigger feature",
+  "description": "把照片里已经有的那个表情或物件画大，还在原来的位置。",
+  "english_prompt": "Push the existing feature already in the photo.",
+  "based_on": "the strongest visible feature",
+  "priority": "expression"
 }
 
 Output JSON only. Do not include any thinking process.
