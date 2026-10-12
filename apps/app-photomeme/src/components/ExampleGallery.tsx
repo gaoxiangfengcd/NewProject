@@ -9,13 +9,12 @@ export function ExampleGallery(): React.ReactElement {
   return (
     <section id="examples" className="scroll-mt-20 pb-10">
       <div className="mx-auto max-w-5xl px-4 text-center sm:px-6">
-        <p className="eyebrow">Real examples</p>
-        <h2 className="mt-1.5 font-display text-2xl font-bold tracking-tight sm:text-3xl">
-          Friends, family, couples — anyone in the photo
+        <h2 className="font-display text-2xl font-bold tracking-tight sm:text-3xl">
+          A few from our users
         </h2>
         <p className="mx-auto mt-2 max-w-lg text-sm leading-relaxed text-muted-foreground">
-          Same 30 seconds. A cartoon they can laugh at and send today, not a change to their real
-          face.
+          Friends, family, couples — anyone in the photo. Same 30 seconds. A cartoon they can laugh
+          at and send today, not a change to their real face.
         </p>
       </div>
 
