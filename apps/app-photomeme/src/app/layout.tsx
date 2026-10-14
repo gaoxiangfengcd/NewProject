@@ -86,6 +86,12 @@ export default function RootLayout({
               />
             </Link>
             <div className="flex items-center gap-3">
+              <Link
+                href="/blog"
+                className="text-sm font-semibold text-muted-foreground transition hover:text-primary"
+              >
+                Blog
+              </Link>
               <span className="hidden text-xs text-muted-foreground sm:block">
                 1 free preview a day
               </span>
@@ -127,6 +133,9 @@ export default function RootLayout({
                 </span>
               </p>
               <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
+                <Link href="/blog" className="transition hover:text-primary">
+                  Blog
+                </Link>
                 <Link href="/privacy" className="transition hover:text-primary">
                   Privacy
                 </Link>
