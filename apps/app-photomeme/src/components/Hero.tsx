@@ -10,9 +10,9 @@ export function Hero(): React.ReactElement {
         Turn their photo into a funny gift in 30 seconds
       </h1>
       <p className="mx-auto mt-3 max-w-md text-base leading-relaxed text-muted-foreground lg:mt-4">
-        A friend, a parent, a partner, the whole family — anyone in a photo you already have. They
-        get a cartoon they can laugh at and send today. Not a filter. Not a face swap. The first
-        preview is free.
+        A friend, a parent, a partner, the whole family — anyone in a photo you already have.
+        Custom cartoon portraits you can laugh at and send today. Not a filter. Not a face swap.
+        Free cartoon portrait.
       </p>
       <a
         href="#generator"

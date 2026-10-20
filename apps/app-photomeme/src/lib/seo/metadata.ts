@@ -3,12 +3,12 @@ import { CONTACT_EMAIL, SITE_NAME, SITE_URL } from '@/lib/site'
 import type { SeoLandingPage } from './types'
 
 export const HOME_SEO = {
-  title: `Funny Personalized Digital Gifts From Photos | ${SITE_NAME}`,
+  title: `Custom Cartoon Portraits From Photos | ${SITE_NAME}`,
   description:
-    'Turn a photo of a friend, partner, or family member into a funny personalized digital gift. MeMeGo finds what makes them unique and exaggerates it into something unforgettable.',
+    'Custom cartoon portraits from photos of a friend, family, or pet. Funny digital gifts you can send today. Free cartoon portrait — no sign-up. Not a filter. Not a face swap.',
   h1: 'Turn their photo into a funny gift in 30 seconds',
   support:
-    'A friend, a parent, a partner, the whole family — anyone in a photo you already have. They get a cartoon they can laugh at and send today. Not a filter. Not a face swap. The first preview is free.',
+    'A friend, a parent, a partner, the whole family — anyone in a photo you already have. Custom cartoon portraits you can laugh at and send today. Not a filter. Not a face swap. Free cartoon portrait.',
 } as const
 
 const OG_IMAGE = {

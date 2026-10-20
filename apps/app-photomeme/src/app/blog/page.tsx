@@ -6,13 +6,13 @@ import { SITE_NAME, SITE_URL } from '@/lib/site'
 
 export const metadata: Metadata = {
   title: 'Blog',
-  description: `How ${SITE_NAME} turns a photo into a funny cartoon gift — with real before and after examples.`,
+  description: `Custom cartoon portraits and how to cartoonize pets — with real before and after examples from ${SITE_NAME}.`,
   alternates: { canonical: '/blog' },
   openGraph: {
     type: 'website',
     siteName: SITE_NAME,
     title: `Blog | ${SITE_NAME}`,
-    description: `How ${SITE_NAME} turns a photo into a funny cartoon gift — with real before and after examples.`,
+    description: `Custom cartoon portraits and how to cartoonize pets — with real before and after examples from ${SITE_NAME}.`,
     url: `${SITE_URL}/blog`,
     images: [{ url: '/examples/friends-after.webp', width: 960, height: 720 }],
   },
@@ -36,7 +36,7 @@ export default function BlogIndexPage(): React.ReactElement {
           Real photos, then the gift
         </h1>
         <p className="mx-auto mt-3 max-w-lg text-sm leading-relaxed text-muted-foreground sm:text-base">
-          How MeMeGo works, with the before and after from gifts people actually made.
+          Custom cartoon portraits from real photos, including how to cartoonize pets.
         </p>
       </header>
 

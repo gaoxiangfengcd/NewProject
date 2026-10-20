@@ -24,16 +24,16 @@ export type BlogPost = {
 export const BLOG_POSTS: BlogPost[] = [
   {
     slug: 'what-is-memego',
-    title: 'What is MeMeGo? A funny gift from a photo you already have',
+    title: 'Custom cartoon portraits from a photo you already have',
     description:
-      'MeMeGo turns a photo into a funny cartoon gift in about 30 seconds. Not a filter. Not a face swap. First preview is free.',
+      'MeMeGo makes custom cartoon portraits from photos in about 30 seconds. Funny, not a filter. Free cartoon portrait — no sign-up.',
     date: '2026-10-14',
     cover: '/examples/friends-after.webp',
     coverAlt: 'A colored-pencil cartoon made from a photo of friends',
     blocks: [
       {
         type: 'p',
-        text: 'MeMeGo is a digital gift. You upload a photo of someone you already have — a friend, a partner, family, even the dog — and it draws a funny cartoon from that photo. You download it and send it. There is no shipping and no account.',
+        text: 'MeMeGo makes custom cartoon portraits from a photo you already have — a friend, a partner, family, even the dog. It is a digital cartoon portrait you download and send. There is no shipping and no account.',
       },
       {
         type: 'p',
@@ -74,7 +74,7 @@ export const BLOG_POSTS: BlogPost[] = [
       { type: 'h2', text: 'How it works' },
       {
         type: 'p',
-        text: 'Upload the photo. Write one line if you want — whose glasses, whose pose, what should get bigger. MeMeGo draws the cartoon in the original scene. Most gifts are ready in 10–20 seconds. The first preview each day is free, at a lighter resolution with a small MeMeGo mark. Unlocking HD gives you the full file with no watermark, ready to send or print.',
+        text: 'Upload the photo. Write one line if you want — whose glasses, whose pose, what should get bigger. MeMeGo draws the cartoon in the original scene. Most gifts are ready in 10–20 seconds. The free cartoon portrait each day is a lighter preview with a small MeMeGo mark. Unlocking HD gives you the full file with no watermark, ready to send or print.',
       },
       {
         type: 'p',
@@ -87,7 +87,7 @@ export const BLOG_POSTS: BlogPost[] = [
     slug: 'last-minute-digital-gift-from-a-photo',
     title: 'A last-minute digital gift you can send tonight',
     description:
-      'Forgot a birthday or anniversary? Turn a photo into a funny cartoon gift in 30 seconds. No shipping. First preview is free.',
+      'Forgot a birthday? Turn a family photo into a cartoon in 30 seconds. No shipping. Free cartoon portrait — no account.',
     date: '2026-10-14',
     cover: '/examples/family-after.webp',
     coverAlt: 'A funny cartoon gift made from a family photo',
@@ -98,7 +98,7 @@ export const BLOG_POSTS: BlogPost[] = [
       },
       {
         type: 'p',
-        text: 'MeMeGo draws a funny cartoon from that photo. You download it and send it in a message. There is no courier and no same-day delivery claim — because nothing is being shipped.',
+        text: 'MeMeGo turns a family photo into a cartoon you can send in a message. There is no courier and no same-day delivery claim — because nothing is being shipped.',
       },
       {
         type: 'pair',
@@ -125,23 +125,23 @@ export const BLOG_POSTS: BlogPost[] = [
       },
       {
         type: 'p',
-        text: 'The first preview is free. No account. If you like it, unlock HD and send the file the same evening.',
+        text: 'The cartoon portrait is free to preview. No account. If you like it, unlock HD and send the file the same evening.',
       },
       { type: 'cta' },
     ],
   },
   {
     slug: 'funny-gift-from-a-pet-photo',
-    title: 'Turn a pet photo into a funny gift',
+    title: 'Cartoonize pets from a photo you already have',
     description:
-      'The dog is family too. Upload a photo you already have and MeMeGo draws a funny cartoon you can send today. First preview is free.',
+      'Cartoonize pets in about 30 seconds. Upload a dog photo and MeMeGo draws a funny cartoon you can send today. Free preview. No sign-up.',
     date: '2026-10-14',
     cover: '/examples/pets-after.webp',
     coverAlt: 'A funny cartoon of two dogs drawn from a living-room photo',
     blocks: [
       {
         type: 'p',
-        text: 'Pet gifts go wrong when they could have been bought for any dog. This one starts from their photo: the bed, the floor, the way they actually flop.',
+        text: 'Cartoonize pets from a photo you already have — the bed, the floor, the way they actually flop. A gift bought for any dog is forgettable. This one is theirs.',
       },
       {
         type: 'pair',
@@ -158,7 +158,12 @@ export const BLOG_POSTS: BlogPost[] = [
       },
       {
         type: 'p',
-        text: 'Use a clear, well-lit shot. You download the cartoon and send it — birthday, memorial, or just because. First preview is free. No account.',
+        text: 'Use a clear, well-lit shot of your dog. You download the cartoon and send it — birthday, memorial, or just because. Free cartoon portrait. No account.',
+      },
+      { type: 'h2', text: 'How to cartoonize pets' },
+      {
+        type: 'p',
+        text: 'Upload the photo. Leave a one-line note if you want — whose flop, whose ears. MeMeGo cartoonizes the pets in the original room. Preview is free. No sign-up.',
       },
       { type: 'cta' },
     ],

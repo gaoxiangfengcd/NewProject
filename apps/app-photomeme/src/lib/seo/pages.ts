@@ -6,10 +6,10 @@ const HOW_INSTANT =
 export const SEO_LANDING_PAGES: SeoLandingPage[] = [
   {
     slug: 'funny-gifts',
-    title: 'Funny Gifts for Friends | MeMeGo',
+    title: 'Funny Cartoon Portraits From Photos | MeMeGo',
     metaDescription:
-      'Looking for a funny gift? Turn their photo into a personalized, exaggerated digital gift with MeMeGo. Create and share it in seconds — no shipping.',
-    h1: 'Funny Personalized Gifts They Will Actually Laugh At',
+      'Funny cartoon portraits from a photo you already have. Personalized, exaggerated, ready to send — no shipping. Free preview.',
+    h1: 'Funny Cartoon Portraits They Will Actually Laugh At',
     eyebrow: 'Funny gifts',
     intro: [
       'Most funny gifts are a mug with a joke that expires by Tuesday. A MeMeGo gift is different: it is them, taken way too far.',
@@ -17,11 +17,11 @@ export const SEO_LANDING_PAGES: SeoLandingPage[] = [
     ],
     primaryKeyword: 'funny gifts',
     secondaryKeywords: [
+      'funny cartoon portraits',
       'funny gift ideas',
       'funny personalized gifts',
       'funny photo gifts',
       'funny digital gifts',
-      'hilarious gift ideas',
     ],
     whyDifferent: [
       'The joke comes from their actual photo, not a stock punchline.',
@@ -36,8 +36,8 @@ export const SEO_LANDING_PAGES: SeoLandingPage[] = [
       'A clear, well-lit photo of their face and a bit of the place around them works best. The scene is part of the joke.',
     faqs: [
       {
-        q: 'Can I make a funny gift for my friend?',
-        a: 'Yes. Upload their photo, and MeMeGo turns a distinctive visual trait into an exaggerated illustrated gift. You can download it and send it as a message.',
+        q: 'Can I get a funny cartoon portrait from a photo?',
+        a: 'Yes. Upload their photo, and MeMeGo turns a distinctive visual trait into a funny cartoon portrait. You can download it and send it as a message.',
       },
       {
         q: 'Is this a physical funny gift?',
@@ -58,23 +58,22 @@ export const SEO_LANDING_PAGES: SeoLandingPage[] = [
   },
   {
     slug: 'personalized-gifts',
-    title: 'Personalized Digital Gifts From Photos | MeMeGo',
+    title: 'Personalized Cartoon From a Photo | MeMeGo',
     metaDescription:
-      'Personalized gifts from a photo, not a monogram. MeMeGo finds what makes them unique and turns it into a funny digital gift you can send instantly.',
-    h1: 'Personalized Gifts Made From Their Photo',
+      'A personalized cartoon from a photo, not a monogram. Custom cartoon portraits you can send today. Free preview, no account.',
+    h1: 'Personalized Cartoon Gifts Made From Their Photo',
     eyebrow: 'Personalized gifts',
     intro: [
       'A name on a tote is personalized. A picture of how they actually show up in the world is personal.',
-      'MeMeGo is a digital personalized gift: you upload a photo of someone you care about, we find a distinctive visual characteristic, and we turn it into a funny illustrated keepsake.',
+      'MeMeGo is a personalized cartoon from their photo: you upload a picture of someone you care about, we find a distinctive visual characteristic, and we turn it into a custom cartoon portrait.',
     ],
-    primaryKeyword: 'personalized gifts',
+    primaryKeyword: 'personalized cartoon',
     secondaryKeywords: [
-      'personalized gift ideas',
-      'personalized digital gifts',
-      'personalized photo gifts',
+      'personalized cartoon character',
+      'custom cartoon portraits',
+      'personalized cartoon portraits',
+      'personalized cartoon family',
       'personalized gifts from photos',
-      'affordable personalized gifts',
-      'unique personalized gifts',
     ],
     whyDifferent: [
       'Custom does not mean their initials in a default font.',
@@ -89,8 +88,8 @@ export const SEO_LANDING_PAGES: SeoLandingPage[] = [
       'Pick a photo that looks like them on a normal day. Outfit, hair, and setting all help the gift feel specific.',
     faqs: [
       {
-        q: 'Can I make a personalized gift from a photo?',
-        a: 'Yes. That is the product. Upload the photo, get a funny illustrated version that still looks like them, then download it.',
+        q: 'Can I make a personalized cartoon from a photo?',
+        a: 'Yes. That is the product. Upload the photo, get a custom cartoon portrait that still looks like them, then download it.',
       },
       {
         q: 'Are these physical personalized gifts?',
@@ -159,23 +158,22 @@ export const SEO_LANDING_PAGES: SeoLandingPage[] = [
   },
   {
     slug: 'photo-gifts',
-    title: 'Funny Photo Gifts From a Picture | MeMeGo',
+    title: 'Cartoon Portraits From Photos | MeMeGo',
     metaDescription:
-      'Turn a photo into a gift. MeMeGo makes funny, personalized photo gifts from a picture of someone you love — digital, instant, and still unmistakably them.',
-    h1: 'Photo Gifts That Start With a Picture You Already Have',
+      'Cartoon portraits from photos you already have. Funny photo gifts, digital and instant, still unmistakably them. Free preview.',
+    h1: 'Cartoon Portraits From Photos You Already Have',
     eyebrow: 'Photo gifts',
     intro: [
       'A printed snapshot is sweet. A photo gift that understands the person in the frame is a story.',
-      'Upload a picture. MeMeGo finds a distinctive visual feature and exaggerates it against the real background. You get a funny photo gift you can send as a file.',
+      'Upload a picture. MeMeGo finds a distinctive visual feature and exaggerates it against the real background. You get cartoon portraits from photos you can send as a file.',
     ],
     primaryKeyword: 'photo gifts',
     secondaryKeywords: [
+      'cartoon portraits from photos',
+      'custom photo cartoon',
       'personalized photo gifts',
       'funny photo gifts',
-      'digital photo gifts',
       'turn a photo into a gift',
-      'make a gift from a photo',
-      'creative photo gifts',
     ],
     whyDifferent: [
       'This is not a filter laid over the same portrait.',
@@ -190,7 +188,7 @@ export const SEO_LANDING_PAGES: SeoLandingPage[] = [
       'Faces should be visible. A little of the room, street, or landscape helps — the gift uses the environment, not a random new background.',
     faqs: [
       {
-        q: 'Can I turn a photo into a funny gift?',
+        q: 'Can I get cartoon portraits from photos?',
         a: 'Yes. Upload the picture, wait about 10–20 seconds, then download the illustrated result and send it.',
       },
       {
@@ -450,21 +448,22 @@ export const SEO_LANDING_PAGES: SeoLandingPage[] = [
 
 const extraFamily: SeoLandingPage = {
   slug: 'gifts-for-family',
-  title: 'Funny Digital Gifts for Family | MeMeGo',
+  title: 'Family Photo to Cartoon Gift | MeMeGo',
   metaDescription:
-    'Personalized photo gifts for family. Turn a parent, sibling, or group snapshot into a funny digital gift they can open on their phone today.',
-  h1: 'Funny Personalized Gifts for Family',
+    'Turn a family photo into a cartoon gift. Funny custom family portraits from a picture you already have. Digital, no shipping, free preview.',
+  h1: 'Turn a Family Photo Into a Cartoon',
   eyebrow: 'Gifts for family',
   intro: [
     'Family gifts often try to be formal. The ones that get passed around the table are the ones that sound like home.',
-    'Upload a photo of a parent, a sibling, or the whole chaotic living room. MeMeGo finds a distinctive, playful visual trait and exaggerates it — still them, still that house.',
+    'Make your family into a cartoon from a photo of a parent, a sibling, or the whole chaotic living room. MeMeGo finds a distinctive, playful visual trait and exaggerates it — still them, still that house. A family cartoon portrait gift you can send today.',
   ],
-  primaryKeyword: 'gifts for family',
+  primaryKeyword: 'family photo to cartoon',
   secondaryKeywords: [
-    'funny gifts for family',
-    'digital gifts for family',
-    'photo gifts for parents',
-    'personalized gifts for family',
+    'family cartoon portrait gift',
+    'turn family picture into cartoon',
+    'funny custom family portraits',
+    'personalized cartoon family',
+    'gifts for family',
   ],
   whyDifferent: [
     'It is not a generic “world’s best dad” layout.',
@@ -476,8 +475,8 @@ const extraFamily: SeoLandingPage = {
   photoTips: 'Candid family photos often beat posed studio shots. Faces should still be clear.',
   faqs: [
     {
-      q: 'Can I make a gift for my parents from a photo?',
-      a: 'Yes. Upload a photo, generate a funny illustrated digital gift, and send the file. HD is print-ready if you want it in a frame.',
+        q: 'Can I turn a family photo into a cartoon?',
+        a: 'Yes. Upload the picture, generate a funny family cartoon portrait, and send the file. HD is print-ready if you want it in a frame.',
     },
     {
       q: 'Is the humor mean?',
